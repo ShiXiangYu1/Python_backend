@@ -1,0 +1,23 @@
+version: '3.8'
+
+# 开发环境特定配置
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+    environment:
+      - APP_ENV=development
+      - APP_DEBUG=true
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+
+  # 在开发环境中启用pgAdmin
+  pgadmin:
+    profiles: []  # 移除profiles限制，使其在开发环境中默认启动 

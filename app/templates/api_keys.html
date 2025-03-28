@@ -1,0 +1,504 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>API密钥管理</h2>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createApiKeyModal">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+        </svg>
+        创建API密钥
+    </button>
+</div>
+
+<div class="alert alert-info">
+    <div class="d-flex">
+        <svg class="flex-shrink-0 me-2" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 16V12M12 8H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div>
+            <h5 class="alert-heading">API密钥使用须知</h5>
+            <p class="mb-0">API密钥用于访问平台API，请妥善保管密钥。密钥创建后只显示一次，请及时保存。</p>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>名称</th>
+                        <th>创建时间</th>
+                        <th>过期时间</th>
+                        <th>最后使用</th>
+                        <th>状态</th>
+                        <th>权限范围</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="apiKeysTable">
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">正在加载...</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer">
+        <nav aria-label="API密钥分页" class="d-flex justify-content-between align-items-center">
+            <div>
+                <span class="text-muted">共 <span id="totalApiKeys">0</span> 个密钥</span>
+            </div>
+            <ul class="pagination mb-0" id="pagination">
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" aria-label="上一页">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" aria-label="下一页">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- 创建API密钥模态框 -->
+<div class="modal fade" id="createApiKeyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">创建新API密钥</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger d-none" id="createApiKeyError"></div>
+                <form id="createApiKeyForm">
+                    <div class="mb-3">
+                        <label for="apiKeyName" class="form-label">密钥名称</label>
+                        <input type="text" class="form-control" id="apiKeyName" placeholder="例如：Web应用" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">权限范围</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="scopeRead" checked>
+                            <label class="form-check-label" for="scopeRead">
+                                读取 (read) - 获取模型和数据
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="scopeWrite">
+                            <label class="form-check-label" for="scopeWrite">
+                                写入 (write) - 创建和更新模型
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="scopeAdmin">
+                            <label class="form-check-label" for="scopeAdmin">
+                                管理 (admin) - 管理平台资源
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="apiKeyExpiry" class="form-label">过期时间</label>
+                        <select class="form-select" id="apiKeyExpiry">
+                            <option value="never">永不过期</option>
+                            <option value="30">30天</option>
+                            <option value="90">90天</option>
+                            <option value="180">180天</option>
+                            <option value="365">1年</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="createApiKeyBtn">创建</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- API密钥显示模态框 -->
+<div class="modal fade" id="showApiKeyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">API密钥创建成功</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <svg class="flex-shrink-0 me-2" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 9V11M12 15H12.01M5.07183 19H18.9282C20.4678 19 21.4301 17.3333 20.6603 16L13.7321 4C12.9623 2.66667 11.0378 2.66667 10.268 4L3.33978 16C2.56998 17.3333 3.53223 19 5.07183 19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    请立即保存您的API密钥，此密钥仅显示一次！
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">您的API密钥</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="newApiKeyValue" readonly>
+                        <button class="btn btn-outline-secondary" type="button" id="copyApiKeyBtn">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                            复制
+                        </button>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">使用示例 (Python)</label>
+                    <pre class="bg-light p-3 rounded"><code>import requests
+
+headers = {
+    'X-API-Key': '<span id="apiKeyExample"></span>'
+}
+
+response = requests.get(
+    'https://api.example.com/v1/models',
+    headers=headers
+)
+
+print(response.json())</code></pre>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">我已保存密钥</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 检查是否登录
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            window.location.href = '/login';
+            return;
+        }
+        
+        // 设置请求头
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        
+        // 当前页面状态
+        const state = {
+            page: 1,
+            pageSize: 10,
+            totalPages: 1
+        };
+        
+        // 加载API密钥数据
+        loadApiKeys();
+        
+        // 创建API密钥按钮点击事件
+        document.getElementById('createApiKeyBtn').addEventListener('click', createApiKey);
+        
+        // 复制API密钥按钮点击事件
+        document.getElementById('copyApiKeyBtn').addEventListener('click', function() {
+            const keyInput = document.getElementById('newApiKeyValue');
+            keyInput.select();
+            document.execCommand('copy');
+            this.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> 已复制';
+            setTimeout(() => {
+                this.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> 复制';
+            }, 2000);
+        });
+        
+        // 加载API密钥列表
+        async function loadApiKeys() {
+            try {
+                const apiKeysTable = document.getElementById('apiKeysTable');
+                apiKeysTable.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">正在加载...</span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                
+                // 构建查询参数
+                const url = `/api/v1/api-keys?page=${state.page}&page_size=${state.pageSize}`;
+                
+                const response = await axios.get(url);
+                const { items, total, page, page_size } = response.data;
+                
+                // 更新总数
+                document.getElementById('totalApiKeys').textContent = total;
+                
+                // 计算总页数
+                state.totalPages = Math.ceil(total / page_size);
+                
+                // 渲染API密钥列表
+                if (items.length > 0) {
+                    let html = '';
+                    items.forEach(key => {
+                        const created = new Date(key.created_at).toLocaleString();
+                        const expires = key.expires_at ? new Date(key.expires_at).toLocaleString() : '永不过期';
+                        const lastUsed = key.last_used_at ? new Date(key.last_used_at).toLocaleString() : '从未使用';
+                        
+                        html += `
+                            <tr>
+                                <td>${key.name}</td>
+                                <td>${created}</td>
+                                <td>${expires}</td>
+                                <td>${lastUsed}</td>
+                                <td>
+                                    <span class="badge bg-${key.is_active ? 'success' : 'danger'}">
+                                        ${key.is_active ? '激活' : '停用'}
+                                    </span>
+                                </td>
+                                <td>
+                                    ${formatScopes(key.scopes)}
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        ${key.is_active ? 
+                                            `<button class="btn btn-sm btn-outline-warning" onclick="deactivateApiKey('${key.id}')">停用</button>` : 
+                                            `<button class="btn btn-sm btn-outline-success" onclick="activateApiKey('${key.id}')">激活</button>`
+                                        }
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteApiKey('${key.id}')">删除</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    apiKeysTable.innerHTML = html;
+                } else {
+                    apiKeysTable.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="text-center py-4">暂无API密钥</td>
+                        </tr>
+                    `;
+                }
+                
+                // 生成分页
+                renderPagination();
+                
+            } catch (error) {
+                console.error('加载API密钥失败:', error);
+                if (error.response && error.response.status === 401) {
+                    // 未授权，跳转到登录页面
+                    localStorage.removeItem('access_token');
+                    window.location.href = '/login';
+                }
+                
+                document.getElementById('apiKeysTable').innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-danger">
+                            加载失败: ${error.response?.data?.detail || error.message || '未知错误'}
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        
+        // 格式化权限范围
+        function formatScopes(scopes) {
+            if (!scopes) return '';
+            
+            const scopeArray = scopes.split(',');
+            let html = '';
+            
+            if (scopeArray.includes('read')) {
+                html += '<span class="badge bg-info me-1">读取</span>';
+            }
+            if (scopeArray.includes('write')) {
+                html += '<span class="badge bg-primary me-1">写入</span>';
+            }
+            if (scopeArray.includes('admin')) {
+                html += '<span class="badge bg-danger me-1">管理</span>';
+            }
+            
+            return html;
+        }
+        
+        // 渲染分页
+        function renderPagination() {
+            const pagination = document.getElementById('pagination');
+            
+            if (state.totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+            
+            let html = `
+                <li class="page-item ${state.page === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" aria-label="上一页" onclick="changePage(${state.page - 1})">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            `;
+            
+            // 显示最多5个页码
+            const maxPages = 5;
+            let startPage = Math.max(1, state.page - Math.floor(maxPages / 2));
+            let endPage = Math.min(state.totalPages, startPage + maxPages - 1);
+            
+            if (endPage - startPage + 1 < maxPages) {
+                startPage = Math.max(1, endPage - maxPages + 1);
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                html += `
+                    <li class="page-item ${i === state.page ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+                    </li>
+                `;
+            }
+            
+            html += `
+                <li class="page-item ${state.page === state.totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" aria-label="下一页" onclick="changePage(${state.page + 1})">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            `;
+            
+            pagination.innerHTML = html;
+        }
+        
+        // 切换页码
+        window.changePage = function(page) {
+            if (page < 1 || page > state.totalPages) {
+                return;
+            }
+            state.page = page;
+            loadApiKeys();
+        };
+        
+        // 创建API密钥
+        async function createApiKey() {
+            const errorElem = document.getElementById('createApiKeyError');
+            errorElem.classList.add('d-none');
+            
+            try {
+                // 获取所选范围
+                const scopes = [];
+                if (document.getElementById('scopeRead').checked) scopes.push('read');
+                if (document.getElementById('scopeWrite').checked) scopes.push('write');
+                if (document.getElementById('scopeAdmin').checked) scopes.push('admin');
+                
+                // 计算过期时间
+                let expiresAt = null;
+                const expiryDays = document.getElementById('apiKeyExpiry').value;
+                if (expiryDays !== 'never') {
+                    const date = new Date();
+                    date.setDate(date.getDate() + parseInt(expiryDays, 10));
+                    expiresAt = date.toISOString();
+                }
+                
+                const keyData = {
+                    name: document.getElementById('apiKeyName').value,
+                    scopes: scopes.join(','),
+                    expires_at: expiresAt
+                };
+                
+                // 发送请求
+                const response = await axios.post('/api/v1/api-keys', keyData);
+                
+                // 关闭创建模态框
+                const createModal = bootstrap.Modal.getInstance(document.getElementById('createApiKeyModal'));
+                createModal.hide();
+                
+                // 显示密钥值
+                document.getElementById('newApiKeyValue').value = response.data.key;
+                document.getElementById('apiKeyExample').textContent = response.data.key;
+                
+                // 显示密钥模态框
+                const showModal = new bootstrap.Modal(document.getElementById('showApiKeyModal'));
+                showModal.show();
+                
+                // 重新加载API密钥列表
+                loadApiKeys();
+                
+                // 清空表单
+                document.getElementById('createApiKeyForm').reset();
+                document.getElementById('scopeRead').checked = true;
+                
+            } catch (error) {
+                console.error('创建API密钥失败:', error);
+                errorElem.textContent = error.response?.data?.detail || '创建失败，请检查输入';
+                errorElem.classList.remove('d-none');
+            }
+        }
+        
+        // 停用API密钥
+        window.deactivateApiKey = async function(keyId) {
+            if (!confirm('确定要停用此API密钥吗？停用后将无法使用此密钥进行API访问。')) {
+                return;
+            }
+            
+            try {
+                // 发送请求
+                await axios.post(`/api/v1/api-keys/${keyId}/deactivate`);
+                
+                // 重新加载API密钥列表
+                loadApiKeys();
+                
+                // 提示停用成功
+                alert('API密钥已成功停用');
+                
+            } catch (error) {
+                console.error('停用API密钥失败:', error);
+                alert('停用失败: ' + (error.response?.data?.detail || '请稍后再试'));
+            }
+        };
+        
+        // 激活API密钥
+        window.activateApiKey = async function(keyId) {
+            try {
+                // 发送请求
+                await axios.put(`/api/v1/api-keys/${keyId}`, {
+                    is_active: true
+                });
+                
+                // 重新加载API密钥列表
+                loadApiKeys();
+                
+                // 提示激活成功
+                alert('API密钥已成功激活');
+                
+            } catch (error) {
+                console.error('激活API密钥失败:', error);
+                alert('激活失败: ' + (error.response?.data?.detail || '请稍后再试'));
+            }
+        };
+        
+        // 删除API密钥
+        window.deleteApiKey = async function(keyId) {
+            if (!confirm('确定要删除此API密钥吗？此操作不可撤销，所有使用此密钥的应用将无法访问API。')) {
+                return;
+            }
+            
+            try {
+                // 发送请求
+                await axios.delete(`/api/v1/api-keys/${keyId}`);
+                
+                // 重新加载API密钥列表
+                loadApiKeys();
+                
+                // 提示删除成功
+                alert('API密钥已成功删除');
+                
+            } catch (error) {
+                console.error('删除API密钥失败:', error);
+                alert('删除失败: ' + (error.response?.data?.detail || '请稍后再试'));
+            }
+        };
+    });
+</script>
+{% endblock %} 

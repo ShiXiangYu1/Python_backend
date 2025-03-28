@@ -1,0 +1,35 @@
+# FastAPI框架
+fastapi==0.104.1
+uvicorn==0.23.2
+python-multipart==0.0.6
+pydantic==2.4.2
+pydantic-settings==2.0.3
+email-validator==2.1.0.post1
+jinja2==3.1.2
+
+# 安全组件
+python-jose==3.3.0
+passlib==1.7.4
+bcrypt==4.0.1
+
+# 数据库
+sqlalchemy==2.0.23
+alembic==1.12.1
+asyncpg==0.28.0
+greenlet==3.0.1
+
+# 日志和调试
+loguru==0.7.2
+tenacity==8.2.3
+python-dotenv==1.0.0
+
+# 测试
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+httpx==0.25.1
+aiosqlite==0.19.0
+
+# 文档
+mkdocs==1.5.3
+mkdocs-material==9.3.1 

@@ -1,0 +1,12 @@
+apiVersion: 1
+
+providers:
+  # 仪表盘提供者配置
+  - name: 'default'
+    orgId: 1
+    folder: ''
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards 

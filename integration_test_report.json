@@ -1,0 +1,135 @@
+{
+  "test_time": "2025-03-25T23:21:01.185940",
+  "duration": 0.029577970504760742,
+  "overall_score": "6/6",
+  "passed_percentage": 100.0,
+  "results": {
+    "file_structure": {
+      "missing_dirs": [],
+      "missing_files": [],
+      "found_dirs": [
+        "app",
+        "app/api",
+        "app/core",
+        "app/db",
+        "app/models",
+        "app/schemas",
+        "app/services",
+        "app/web",
+        "tests"
+      ],
+      "found_files": [
+        "app/main.py",
+        "app/core/config.py",
+        "app/db/session.py",
+        "app/models/user.py",
+        "app/models/api_key.py",
+        "app/models/model.py",
+        "requirements.txt",
+        ".env"
+      ],
+      "all_passed": true
+    },
+    "api_definition": {
+      "router_files": [
+        "app\\api\\deps.py",
+        "app\\api\\routes.py",
+        "app\\api\\endpoints\\api_keys.py",
+        "app\\api\\endpoints\\auth.py",
+        "app\\api\\endpoints\\health.py",
+        "app\\api\\endpoints\\models.py",
+        "app\\api\\endpoints\\users.py"
+      ],
+      "endpoints": [
+        "@router.post(\"\", response_model=APIKeyCreated)",
+        "@router.get(\"\", response_model=Page[APIKey])",
+        "@router.get(\"/{api_key_id}\", response_model=APIKey)",
+        "@router.put(\"/{api_key_id}\", response_model=APIKey)",
+        "@router.delete(\"/{api_key_id}\", response_model=Message)",
+        "@router.post(\"/{api_key_id}/deactivate\", response_model=APIKey)",
+        "@router.post(\"/login\", response_model=Token)",
+        "@router.post(\"/login/json\", response_model=Token)",
+        "@router.post(\"/register\", response_model=User)",
+        "@router.post(\"/password-reset\", response_model=Message)",
+        "@router.post(\"/password-change\", response_model=Message)",
+        "@router.get(\"/health\", status_code=status.HTTP_200_OK)",
+        "@router.post(\"\", response_model=Model)",
+        "@router.get(\"\", response_model=Page[Model])",
+        "@router.get(\"/public\", response_model=Page[Model])",
+        "@router.get(\"/{model_id}\", response_model=Model)",
+        "@router.put(\"/{model_id}\", response_model=Model)",
+        "@router.delete(\"/{model_id}\", response_model=Message)",
+        "@router.post(\"/{model_id}/upload\", response_model=Model)",
+        "@router.post(\"/{model_id}/deploy\", response_model=Model)",
+        "@router.post(\"/{model_id}/versions\", response_model=ModelVersion)",
+        "@router.get(\"/{model_id}/versions\", response_model=List[ModelVersion])",
+        "@router.get(\"/{model_id}/versions/{version_id}\", response_model=ModelVersion)",
+        "@router.post(\"/{model_id}/versions/{version_id}/set-current\", response_model=ModelVersion)",
+        "@router.delete(\"/{model_id}/versions/{version_id}\", response_model=Message)",
+        "@router.get(\"/me\", response_model=UserSchema)",
+        "@router.put(\"/me\", response_model=UserSchema)",
+        "@router.get(\"\", response_model=Page[UserSchema])",
+        "@router.post(\"\", response_model=UserSchema)",
+        "@router.get(\"/{user_id}\", response_model=UserSchema)",
+        "@router.put(\"/{user_id}\", response_model=UserSchema)",
+        "@router.delete(\"/{user_id}\", response_model=Message)"
+      ],
+      "has_basic_endpoints": true
+    },
+    "model_schema": {
+      "models": [
+        "api_key",
+        "model",
+        "user"
+      ],
+      "schemas": [
+        "api_key",
+        "auth",
+        "common",
+        "model",
+        "user"
+      ],
+      "has_essential_models": true,
+      "has_corresponding_schemas": true
+    },
+    "config": {
+      "config_exists": true,
+      "env_exists": true,
+      "required_settings": [
+        "SECRET_KEY",
+        "ALGORITHM",
+        "ACCESS_TOKEN_EXPIRE_MINUTES",
+        "DATABASE_URL",
+        "APP_NAME"
+      ],
+      "missing_settings": [],
+      "all_passed": true
+    },
+    "service_layer": {
+      "service_files": [
+        "api_key",
+        "base",
+        "model",
+        "user"
+      ],
+      "has_service_layer": true,
+      "has_essential_services": true
+    },
+    "test_suite": {
+      "test_files": [
+        "tests\\conftest.py",
+        "tests\\api\\test_api_keys_api.py",
+        "tests\\api\\test_auth_api.py",
+        "tests\\api\\test_health_api.py",
+        "tests\\api\\test_models_api.py",
+        "tests\\api\\test_users_api.py",
+        "tests\\services\\test_api_key_service.py",
+        "tests\\services\\test_model_service.py",
+        "tests\\services\\test_user_service.py"
+      ],
+      "has_tests": true,
+      "has_api_tests": true,
+      "has_unit_tests": true
+    }
+  }
+}

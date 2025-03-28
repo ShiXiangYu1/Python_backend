@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <svg class="mb-3" width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#0d6efd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 17L12 22L22 17" stroke="#0d6efd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 12L12 17L22 12" stroke="#0d6efd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <h2 class="fw-bold">用户注册</h2>
+                    <p class="text-muted">创建您的AI模型管理平台账号</p>
+                </div>
+                
+                <div class="alert alert-danger d-none" id="registerError" role="alert"></div>
+                <div class="alert alert-success d-none" id="registerSuccess" role="alert"></div>
+                
+                <form id="registerForm">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">用户名</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                        <div class="form-text">用户名需要4-20个字符，只能包含字母、数字和下划线</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">电子邮箱</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">密码</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                        <div class="form-text">密码长度至少8位，包含字母和数字</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmPassword" class="form-label">确认密码</label>
+                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="agreeTerms" required>
+                        <label class="form-check-label" for="agreeTerms">我同意<a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">服务条款</a>和<a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">隐私政策</a></label>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">注册</button>
+                    </div>
+                </form>
+                
+                <div class="mt-4 text-center">
+                    <p>已有账号？ <a href="/login">立即登录</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 服务条款模态框 -->
+<div class="modal fade" id="termsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">服务条款</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>欢迎使用AI模型管理平台，请仔细阅读以下条款：</p>
+                <ol>
+                    <li>用户需对自己的账号安全负责</li>
+                    <li>不得利用平台进行任何非法活动</li>
+                    <li>不得上传违法或侵权内容</li>
+                    <li>平台有权对违反条款的账号采取限制措施</li>
+                    <li>我们保留随时修改服务条款的权利</li>
+                </ol>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 隐私政策模态框 -->
+<div class="modal fade" id="privacyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">隐私政策</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>您的隐私对我们非常重要，我们的隐私政策包括：</p>
+                <ol>
+                    <li>我们收集的个人信息类型</li>
+                    <li>信息的使用方式</li>
+                    <li>数据保护措施</li>
+                    <li>第三方共享政策</li>
+                    <li>您对个人数据的控制权</li>
+                </ol>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const registerForm = document.getElementById('registerForm');
+        const registerError = document.getElementById('registerError');
+        const registerSuccess = document.getElementById('registerSuccess');
+        const password = document.getElementById('password');
+        const confirmPassword = document.getElementById('confirmPassword');
+        
+        // 密码一致性验证
+        function validatePassword() {
+            if (password.value !== confirmPassword.value) {
+                confirmPassword.setCustomValidity('两次输入的密码不一致');
+            } else {
+                confirmPassword.setCustomValidity('');
+            }
+        }
+        
+        password.addEventListener('change', validatePassword);
+        confirmPassword.addEventListener('keyup', validatePassword);
+        
+        registerForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            // 隐藏之前的提示
+            registerError.classList.add('d-none');
+            registerSuccess.classList.add('d-none');
+            
+            try {
+                const response = await axios.post('/api/v1/auth/register', {
+                    username: username,
+                    email: email,
+                    password: password,
+                    confirm_password: confirmPassword.value
+                });
+                
+                registerSuccess.textContent = '注册成功！即将为您跳转到登录页面';
+                registerSuccess.classList.remove('d-none');
+                registerForm.reset();
+                
+                // 3秒后跳转到登录页面
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 3000);
+            } catch (error) {
+                registerError.textContent = error.response?.data?.detail || '注册失败，请检查您的输入';
+                registerError.classList.remove('d-none');
+            }
+        });
+    });
+</script>
+{% endblock %} 

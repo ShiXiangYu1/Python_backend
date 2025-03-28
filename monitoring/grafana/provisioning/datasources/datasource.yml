@@ -1,0 +1,12 @@
+apiVersion: 1
+
+# 数据源列表配置
+datasources:
+  # Prometheus数据源
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    version: 1 

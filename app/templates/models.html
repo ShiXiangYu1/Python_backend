@@ -1,0 +1,621 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>模型管理</h2>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModelModal">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+        </svg>
+        创建模型
+    </button>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="input-group">
+            <input type="text" class="form-control" id="searchInput" placeholder="搜索模型名称或描述">
+            <button class="btn btn-outline-secondary" type="button" id="searchButton">搜索</button>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="btn-group w-100" role="group">
+            <input type="radio" class="btn-check" name="modelFilter" id="allModels" checked>
+            <label class="btn btn-outline-primary" for="allModels">全部模型</label>
+            
+            <input type="radio" class="btn-check" name="modelFilter" id="myModels">
+            <label class="btn btn-outline-primary" for="myModels">我的模型</label>
+            
+            <input type="radio" class="btn-check" name="modelFilter" id="publicModels">
+            <label class="btn btn-outline-primary" for="publicModels">公开模型</label>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>名称</th>
+                        <th>框架</th>
+                        <th>版本</th>
+                        <th>状态</th>
+                        <th>公开</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="modelsTable">
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">正在加载...</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer">
+        <nav aria-label="模型分页" class="d-flex justify-content-between align-items-center">
+            <div>
+                <span class="text-muted">共 <span id="totalModels">0</span> 个模型</span>
+            </div>
+            <ul class="pagination mb-0" id="pagination">
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" aria-label="上一页">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" aria-label="下一页">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- 创建模型模态框 -->
+<div class="modal fade" id="createModelModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">创建新模型</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger d-none" id="createModelError"></div>
+                <form id="createModelForm">
+                    <div class="mb-3">
+                        <label for="modelName" class="form-label">模型名称</label>
+                        <input type="text" class="form-control" id="modelName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="modelDescription" class="form-label">模型描述</label>
+                        <textarea class="form-control" id="modelDescription" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="modelFramework" class="form-label">框架</label>
+                        <select class="form-select" id="modelFramework" required>
+                            <option value="tensorflow">TensorFlow</option>
+                            <option value="pytorch">PyTorch</option>
+                            <option value="onnx">ONNX</option>
+                            <option value="sklearn">Scikit-Learn</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="modelVersion" class="form-label">版本</label>
+                        <input type="text" class="form-control" id="modelVersion" placeholder="例如：1.0.0" required>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="isPublic">
+                        <label class="form-check-label" for="isPublic">公开模型 (允许其他用户查看和使用)</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="createModelBtn">创建</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 上传模型文件模态框 -->
+<div class="modal fade" id="uploadModelModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">上传模型文件</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger d-none" id="uploadModelError"></div>
+                <form id="uploadModelForm">
+                    <input type="hidden" id="uploadModelId">
+                    <div class="mb-3">
+                        <label for="modelFile" class="form-label">选择模型文件</label>
+                        <input class="form-control" type="file" id="modelFile" required>
+                    </div>
+                    <div class="progress d-none" id="uploadProgress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="uploadModelBtn">上传</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 模型部署模态框 -->
+<div class="modal fade" id="deployModelModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">部署模型</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger d-none" id="deployModelError"></div>
+                <form id="deployModelForm">
+                    <input type="hidden" id="deployModelId">
+                    <div class="mb-3">
+                        <label for="instanceType" class="form-label">实例类型</label>
+                        <select class="form-select" id="instanceType" required>
+                            <option value="cpu.small">CPU 小型实例 (1 vCPU, 2 GB RAM)</option>
+                            <option value="cpu.medium">CPU 中型实例 (2 vCPU, 4 GB RAM)</option>
+                            <option value="cpu.large">CPU 大型实例 (4 vCPU, 8 GB RAM)</option>
+                            <option value="gpu.small">GPU 小型实例 (1 GPU, 4 vCPU, 16 GB RAM)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="scalingType" class="form-label">扩缩容策略</label>
+                        <select class="form-select" id="scalingType" required>
+                            <option value="manual">手动扩缩容</option>
+                            <option value="auto">自动扩缩容 (根据流量自动调整实例数)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="minInstances" class="form-label">最小实例数</label>
+                        <input type="number" class="form-control" id="minInstances" min="1" max="5" value="1">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="deployModelBtn">部署</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 检查是否登录
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            window.location.href = '/login';
+            return;
+        }
+        
+        // 设置请求头
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        
+        // 当前页面状态
+        const state = {
+            page: 1,
+            pageSize: 10,
+            filter: 'all',
+            search: '',
+            totalPages: 1
+        };
+        
+        // 加载模型数据
+        loadModels();
+        
+        // 监听过滤器变化
+        document.getElementById('allModels').addEventListener('change', function() {
+            if (this.checked) {
+                state.filter = 'all';
+                state.page = 1;
+                loadModels();
+            }
+        });
+        
+        document.getElementById('myModels').addEventListener('change', function() {
+            if (this.checked) {
+                state.filter = 'my';
+                state.page = 1;
+                loadModels();
+            }
+        });
+        
+        document.getElementById('publicModels').addEventListener('change', function() {
+            if (this.checked) {
+                state.filter = 'public';
+                state.page = 1;
+                loadModels();
+            }
+        });
+        
+        // 搜索按钮点击事件
+        document.getElementById('searchButton').addEventListener('click', function() {
+            state.search = document.getElementById('searchInput').value.trim();
+            state.page = 1;
+            loadModels();
+        });
+        
+        // 搜索输入框回车事件
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                state.search = this.value.trim();
+                state.page = 1;
+                loadModels();
+            }
+        });
+        
+        // 创建模型按钮点击事件
+        document.getElementById('createModelBtn').addEventListener('click', createModel);
+        
+        // 上传模型按钮点击事件
+        document.getElementById('uploadModelBtn').addEventListener('click', uploadModelFile);
+        
+        // 部署模型按钮点击事件
+        document.getElementById('deployModelBtn').addEventListener('click', deployModel);
+        
+        // 加载模型列表
+        async function loadModels() {
+            try {
+                const modelsTable = document.getElementById('modelsTable');
+                modelsTable.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">正在加载...</span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                
+                // 构建查询参数
+                let url = `/api/v1/models?page=${state.page}&page_size=${state.pageSize}`;
+                
+                if (state.filter === 'public') {
+                    url = `/api/v1/models/public?page=${state.page}&page_size=${state.pageSize}`;
+                } else if (state.filter === 'my') {
+                    // 我的模型只需要获取当前用户的模型
+                    url = `/api/v1/models?page=${state.page}&page_size=${state.pageSize}&owner_id=me`;
+                }
+                
+                if (state.search) {
+                    url += `&search=${encodeURIComponent(state.search)}`;
+                }
+                
+                const response = await axios.get(url);
+                const { items, total, page, page_size } = response.data;
+                
+                // 更新总数
+                document.getElementById('totalModels').textContent = total;
+                
+                // 计算总页数
+                state.totalPages = Math.ceil(total / page_size);
+                
+                // 渲染模型列表
+                if (items.length > 0) {
+                    let html = '';
+                    items.forEach(model => {
+                        const created = new Date(model.created_at).toLocaleString();
+                        html += `
+                            <tr>
+                                <td>${model.name}</td>
+                                <td>${model.framework}</td>
+                                <td>${model.version}</td>
+                                <td><span class="badge bg-${getStatusBadge(model.status)}">${getStatusText(model.status)}</span></td>
+                                <td>${model.is_public ? '<span class="badge bg-success">公开</span>' : '<span class="badge bg-secondary">私有</span>'}</td>
+                                <td>${created}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewModel('${model.id}')">查看</button>
+                                        ${model.status === 'uploading' ? 
+                                            `<button class="btn btn-sm btn-outline-success" onclick="showUploadModal('${model.id}')">上传</button>` : ''}
+                                        ${model.status === 'uploaded' ? 
+                                            `<button class="btn btn-sm btn-outline-info" onclick="showDeployModal('${model.id}')">部署</button>` : ''}
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteModel('${model.id}')">删除</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    modelsTable.innerHTML = html;
+                } else {
+                    modelsTable.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="text-center py-4">暂无数据</td>
+                        </tr>
+                    `;
+                }
+                
+                // 生成分页
+                renderPagination();
+                
+            } catch (error) {
+                console.error('加载模型失败:', error);
+                if (error.response && error.response.status === 401) {
+                    // 未授权，跳转到登录页面
+                    localStorage.removeItem('access_token');
+                    window.location.href = '/login';
+                }
+                
+                document.getElementById('modelsTable').innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-danger">
+                            加载失败: ${error.response?.data?.detail || error.message || '未知错误'}
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        
+        // 渲染分页
+        function renderPagination() {
+            const pagination = document.getElementById('pagination');
+            
+            if (state.totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+            
+            let html = `
+                <li class="page-item ${state.page === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" aria-label="上一页" onclick="changePage(${state.page - 1})">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            `;
+            
+            // 显示最多5个页码
+            const maxPages = 5;
+            let startPage = Math.max(1, state.page - Math.floor(maxPages / 2));
+            let endPage = Math.min(state.totalPages, startPage + maxPages - 1);
+            
+            if (endPage - startPage + 1 < maxPages) {
+                startPage = Math.max(1, endPage - maxPages + 1);
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                html += `
+                    <li class="page-item ${i === state.page ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+                    </li>
+                `;
+            }
+            
+            html += `
+                <li class="page-item ${state.page === state.totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" aria-label="下一页" onclick="changePage(${state.page + 1})">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            `;
+            
+            pagination.innerHTML = html;
+        }
+        
+        // 切换页码
+        window.changePage = function(page) {
+            if (page < 1 || page > state.totalPages) {
+                return;
+            }
+            state.page = page;
+            loadModels();
+        };
+        
+        // 创建模型
+        async function createModel() {
+            const errorElem = document.getElementById('createModelError');
+            errorElem.classList.add('d-none');
+            
+            try {
+                const modelData = {
+                    name: document.getElementById('modelName').value,
+                    description: document.getElementById('modelDescription').value,
+                    framework: document.getElementById('modelFramework').value,
+                    version: document.getElementById('modelVersion').value,
+                    is_public: document.getElementById('isPublic').checked
+                };
+                
+                // 发送请求
+                const response = await axios.post('/api/v1/models', modelData);
+                
+                // 关闭模态框
+                const modal = bootstrap.Modal.getInstance(document.getElementById('createModelModal'));
+                modal.hide();
+                
+                // 重新加载模型列表
+                loadModels();
+                
+                // 清空表单
+                document.getElementById('createModelForm').reset();
+                
+                // 提示创建成功
+                alert('模型创建成功，请上传模型文件');
+                
+                // 显示上传模态框
+                showUploadModal(response.data.id);
+                
+            } catch (error) {
+                console.error('创建模型失败:', error);
+                errorElem.textContent = error.response?.data?.detail || '创建失败，请检查输入';
+                errorElem.classList.remove('d-none');
+            }
+        }
+        
+        // 显示上传模态框
+        window.showUploadModal = function(modelId) {
+            document.getElementById('uploadModelId').value = modelId;
+            document.getElementById('uploadModelError').classList.add('d-none');
+            document.getElementById('uploadProgress').classList.add('d-none');
+            document.getElementById('uploadModelForm').reset();
+            
+            const modal = new bootstrap.Modal(document.getElementById('uploadModelModal'));
+            modal.show();
+        };
+        
+        // 上传模型文件
+        async function uploadModelFile() {
+            const errorElem = document.getElementById('uploadModelError');
+            const progressBar = document.getElementById('uploadProgress');
+            const progressBarInner = progressBar.querySelector('.progress-bar');
+            
+            errorElem.classList.add('d-none');
+            progressBar.classList.remove('d-none');
+            
+            try {
+                const modelId = document.getElementById('uploadModelId').value;
+                const fileInput = document.getElementById('modelFile');
+                
+                if (!fileInput.files || fileInput.files.length === 0) {
+                    throw new Error('请选择要上传的文件');
+                }
+                
+                const file = fileInput.files[0];
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                // 设置上传进度回调
+                const config = {
+                    onUploadProgress: progressEvent => {
+                        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                        progressBarInner.style.width = percentCompleted + '%';
+                        progressBarInner.setAttribute('aria-valuenow', percentCompleted);
+                    }
+                };
+                
+                // 发送请求
+                await axios.post(`/api/v1/models/${modelId}/upload`, formData, config);
+                
+                // 关闭模态框
+                const modal = bootstrap.Modal.getInstance(document.getElementById('uploadModelModal'));
+                modal.hide();
+                
+                // 重新加载模型列表
+                loadModels();
+                
+                // 提示上传成功
+                alert('模型文件上传成功!');
+                
+            } catch (error) {
+                console.error('上传模型文件失败:', error);
+                errorElem.textContent = error.response?.data?.detail || '上传失败';
+                errorElem.classList.remove('d-none');
+                progressBar.classList.add('d-none');
+            }
+        }
+        
+        // 显示部署模态框
+        window.showDeployModal = function(modelId) {
+            document.getElementById('deployModelId').value = modelId;
+            document.getElementById('deployModelError').classList.add('d-none');
+            document.getElementById('deployModelForm').reset();
+            
+            const modal = new bootstrap.Modal(document.getElementById('deployModelModal'));
+            modal.show();
+        };
+        
+        // 部署模型
+        async function deployModel() {
+            const errorElem = document.getElementById('deployModelError');
+            errorElem.classList.add('d-none');
+            
+            try {
+                const modelId = document.getElementById('deployModelId').value;
+                const configData = {
+                    config: {
+                        instance_type: document.getElementById('instanceType').value,
+                        scaling: document.getElementById('scalingType').value,
+                        min_instances: parseInt(document.getElementById('minInstances').value, 10)
+                    }
+                };
+                
+                // 发送请求
+                await axios.post(`/api/v1/models/${modelId}/deploy`, configData);
+                
+                // 关闭模态框
+                const modal = bootstrap.Modal.getInstance(document.getElementById('deployModelModal'));
+                modal.hide();
+                
+                // 重新加载模型列表
+                loadModels();
+                
+                // 提示部署成功
+                alert('模型部署成功! 您可以在模型详情页查看API端点。');
+                
+            } catch (error) {
+                console.error('部署模型失败:', error);
+                errorElem.textContent = error.response?.data?.detail || '部署失败，请稍后再试';
+                errorElem.classList.remove('d-none');
+            }
+        }
+        
+        // 删除模型
+        window.deleteModel = async function(modelId) {
+            if (!confirm('确定要删除这个模型吗？此操作不可撤销。')) {
+                return;
+            }
+            
+            try {
+                // 发送请求
+                await axios.delete(`/api/v1/models/${modelId}`);
+                
+                // 重新加载模型列表
+                loadModels();
+                
+                // 提示删除成功
+                alert('模型已成功删除!');
+                
+            } catch (error) {
+                console.error('删除模型失败:', error);
+                alert('删除失败: ' + (error.response?.data?.detail || '请稍后再试'));
+            }
+        };
+        
+        // 查看模型详情
+        window.viewModel = function(modelId) {
+            window.location.href = `/models/${modelId}`;
+        };
+    });
+    
+    // 获取状态对应的徽章颜色
+    function getStatusBadge(status) {
+        switch(status) {
+            case 'uploaded': return 'success';
+            case 'uploading': return 'warning';
+            case 'deployed': return 'primary';
+            case 'failed': return 'danger';
+            default: return 'secondary';
+        }
+    }
+    
+    // 获取状态对应的中文文本
+    function getStatusText(status) {
+        switch(status) {
+            case 'uploaded': return '已上传';
+            case 'uploading': return '上传中';
+            case 'deployed': return '已部署';
+            case 'failed': return '失败';
+            default: return '未知';
+        }
+    }
+</script>
+{% endblock %} 

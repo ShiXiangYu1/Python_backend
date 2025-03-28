@@ -1,0 +1,58 @@
+global:
+  scrape_interval: 15s  # 默认的抓取间隔，15秒
+  evaluation_interval: 15s  # 评估规则的间隔
+  scrape_timeout: 10s  # 抓取超时时间
+
+# Alertmanager配置
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # 未来可以添加alertmanager服务地址
+          # - alertmanager:9093
+
+# 规则文件，可以包含告警规则和记录规则
+rule_files:
+  # - "alert_rules.yml"
+
+# 数据抓取配置
+scrape_configs:
+  # 自身监控
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # 应用服务监控
+  - job_name: 'app'
+    scrape_interval: 10s
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['app:8000']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'ai-model-platform'
+
+  # Node Exporter监控 - 系统指标
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # cAdvisor监控 - 容器指标
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+
+  # PostgreSQL监控
+  - job_name: 'postgres'
+    static_configs:
+      - targets:
+        # 如果将来添加了postgres_exporter
+        # - postgres-exporter:9187
+
+  # Redis监控
+  - job_name: 'redis'
+    static_configs:
+      - targets:
+        # 如果将来添加了redis_exporter
+        # - redis-exporter:9121 

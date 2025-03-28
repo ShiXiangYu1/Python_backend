@@ -1,0 +1,128 @@
+version: '3.8'
+
+# 任务处理系统Docker Compose配置
+# 包含Celery Worker和Beat服务，以及Redis作为消息代理和结果后端
+
+services:
+  # Redis服务
+  # 作为Celery的消息代理和结果后端
+  redis:
+    image: redis:7.0-alpine
+    container_name: task-redis
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    ports:
+      - "6379:6379"
+    networks:
+      - task-network
+    command: redis-server --appendonly yes
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+  
+  # Celery Worker服务
+  # 处理异步任务，支持多队列和优先级
+  celery-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: task-worker
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - ./logs:/app/logs
+    command: python -m scripts.celery_worker --queues=high_priority,default,low_priority --concurrency=4 --loglevel=INFO
+    networks:
+      - task-network
+    healthcheck:
+      test: ["CMD", "celery", "inspect", "ping", "-A", "app.celery_app.celery_app"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+  
+  # Celery Beat服务
+  # 负责调度定时任务
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: task-beat
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      celery-worker:
+        condition: service_started
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - ./logs:/app/logs
+    command: python -m scripts.celery_beat --loglevel=INFO --scheduler=celery.beat.PersistentScheduler --schedule=/app/logs/celerybeat-schedule
+    networks:
+      - task-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+  
+  # Flower监控服务
+  # 提供Celery任务的可视化监控界面
+  flower:
+    image: mher/flower:1.2
+    container_name: task-flower
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      - FLOWER_PORT=5555
+      - FLOWER_BASIC_AUTH=${FLOWER_USER:-admin}:${FLOWER_PASSWORD:-admin}
+    ports:
+      - "5555:5555"
+    command: celery flower --broker=${CELERY_BROKER_URL} --persistent=True --db=/data/flower.db
+    volumes:
+      - flower-data:/data
+    networks:
+      - task-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:5555"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# 数据卷定义
+volumes:
+  redis-data: # Redis数据持久化
+  flower-data: # Flower监控数据持久化
+
+# 网络定义
+networks:
+  task-network:
+    driver: bridge 

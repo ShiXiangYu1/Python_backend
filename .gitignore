@@ -1,0 +1,58 @@
+# Python字节码文件
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 虚拟环境
+venv/
+env/
+ENV/
+
+# 分发/打包
+dist/
+build/
+*.egg-info/
+
+# 单元测试/覆盖率报告
+.coverage
+htmlcov/
+.pytest_cache/
+.coverage.*
+coverage.xml
+*.cover
+
+# 本地环境变量
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# 日志
+*.log
+logs/
+
+# IDE相关
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# 模型文件
+*.h5
+*.pt
+*.onnx
+*.pb
+model_uploads/
+
+# 数据库
+*.db
+*.sqlite3
+
+# 其他
+.DS_Store
+.env.backup
+temp/
+tmp/
+.ipynb_checkpoints/ 
