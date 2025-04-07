@@ -11,7 +11,7 @@ Web路由处理模块
 import os
 from pathlib import Path
 from fastapi import APIRouter, Request, Depends, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 # 创建路由
@@ -42,35 +42,43 @@ async def index(request: Request):
 @web_router.get("/login", response_class=HTMLResponse)
 async def login(request: Request):
     """
-    渲染登录页面
+    渲染登录页面或重定向到静态HTML登录页
     
     参数:
         request: 请求对象
         
     返回:
-        HTMLResponse: 渲染后的HTML页面
+        HTMLResponse或RedirectResponse: 渲染后的HTML页面或重定向响应
     """
-    return templates.TemplateResponse(
-        "login.html", 
-        {"request": request, "title": "登录"}
-    )
+    # 重定向到静态HTML登录页
+    return RedirectResponse(url="/static/html/login.html")
+    
+    # 以下代码注释掉，不再使用模板渲染
+    # return templates.TemplateResponse(
+    #     "login.html", 
+    #     {"request": request, "title": "登录"}
+    # )
 
 
 @web_router.get("/register", response_class=HTMLResponse)
 async def register(request: Request):
     """
-    渲染注册页面
+    渲染注册页面或重定向到静态HTML注册页
     
     参数:
         request: 请求对象
         
     返回:
-        HTMLResponse: 渲染后的HTML页面
+        HTMLResponse或RedirectResponse: 渲染后的HTML页面或重定向响应
     """
-    return templates.TemplateResponse(
-        "register.html", 
-        {"request": request, "title": "注册"}
-    )
+    # 重定向到静态HTML注册页
+    return RedirectResponse(url="/static/html/register.html")
+    
+    # 以下代码注释掉，不再使用模板渲染
+    # return templates.TemplateResponse(
+    #     "register.html", 
+    #     {"request": request, "title": "注册"}
+    # )
 
 
 @web_router.get("/dashboard", response_class=HTMLResponse)

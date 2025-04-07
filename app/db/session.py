@@ -93,4 +93,82 @@ def get_sync_db() -> Generator[Session, None, None]:
         try:
             yield session
         finally:
-            session.close() 
+            session.close()
+
+
+async def create_db_and_tables() -> None:
+    """
+    创建数据库表
+    
+    在应用启动时根据SQLAlchemy模型创建数据库表。
+    如果表已存在，则不会执行任何操作。
+    
+    此函数适用于开发环境和简单部署。
+    对于生产环境，推荐使用数据库迁移工具（如Alembic）。
+    """
+    import logging
+    from sqlalchemy.schema import CreateTable
+    
+    try:
+        # 确保导入所有模型以注册到元数据
+        import app.models.user
+        import app.models.api_key
+        import app.models.model
+        import app.models.task
+        
+        # 创建所有表
+        logging.info("创建数据库表...")
+        async with engine.begin() as conn:
+            # 检查是否为SQLite数据库
+            dialect = engine.dialect.name
+            if dialect == 'sqlite':
+                # SQLite特殊处理：启用外键约束
+                from sqlalchemy import text
+                await conn.execute(text("PRAGMA foreign_keys=ON"))
+            
+            # 使用显式的表创建顺序，避免外键依赖性问题
+            # 1. 创建不依赖其他表的基础表（users, models）
+            from app.models.user import User
+            from app.models.model import Model
+            
+            # 首先创建用户表
+            await conn.run_sync(lambda conn: User.__table__.create(conn, checkfirst=True))
+            logging.info("创建表: users")
+            
+            # 然后创建模型表
+            await conn.run_sync(lambda conn: Model.__table__.create(conn, checkfirst=True))
+            logging.info("创建表: models")
+            
+            # 2. 创建依赖于基础表的其他表（api_keys, tasks, model_versions等）
+            from app.models.api_key import APIKey
+            from app.models.task import Task
+            from app.models.model import ModelVersion
+            
+            await conn.run_sync(lambda conn: APIKey.__table__.create(conn, checkfirst=True))
+            logging.info("创建表: api_keys")
+            
+            await conn.run_sync(lambda conn: Task.__table__.create(conn, checkfirst=True))
+            logging.info("创建表: tasks")
+            
+            await conn.run_sync(lambda conn: ModelVersion.__table__.create(conn, checkfirst=True))
+            logging.info("创建表: model_versions")
+            
+            # 3. 创建其他剩余表（如果有）
+            # 获取已创建的表
+            created_tables = {
+                User.__tablename__, Model.__tablename__, 
+                APIKey.__tablename__, Task.__tablename__, ModelVersion.__tablename__
+            }
+            
+            # 创建剩余表
+            for table in Base.metadata.sorted_tables:
+                if table.name not in created_tables:
+                    await conn.run_sync(lambda conn, t=table: t.create(conn, checkfirst=True))
+                    logging.info(f"创建表: {table.name}")
+        
+        logging.info("数据库表创建成功")
+    except Exception as e:
+        logging.error(f"创建数据库表失败: {str(e)}")
+        # 在开发环境下重新抛出异常，以便更好地调试
+        if settings.APP_DEBUG:
+            raise 

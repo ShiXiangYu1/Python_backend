@@ -1,0 +1,172 @@
+{
+  "authentication": [
+    {
+      "name": "未认证访问保护资源",
+      "status": "通过",
+      "details": "未认证请求被正确拒绝"
+    },
+    {
+      "name": "无效令牌认证",
+      "status": "通过",
+      "details": "无效令牌被正确拒绝"
+    },
+    {
+      "name": "有效令牌认证",
+      "status": "通过",
+      "details": "有效令牌被正确接受"
+    },
+    {
+      "name": "暴力破解防护",
+      "status": "通过",
+      "details": "检测到延迟响应机制，响应时间: 2.30秒"
+    }
+  ],
+  "injection": [
+    {
+      "name": "登录SQL注入 (' OR '1'='1)",
+      "status": "通过",
+      "details": "登录端点正确处理了SQL注入尝试"
+    },
+    {
+      "name": "登录SQL注入 (admin' --)",
+      "status": "通过",
+      "details": "登录端点正确处理了SQL注入尝试"
+    },
+    {
+      "name": "登录SQL注入 (1'; DROP TABLE users; --)",
+      "status": "通过",
+      "details": "登录端点正确处理了SQL注入尝试"
+    },
+    {
+      "name": "登录SQL注入 (1' UNION SELECT username, password FROM users --)",
+      "status": "通过",
+      "details": "登录端点正确处理了SQL注入尝试"
+    },
+    {
+      "name": "查询参数注入 (' OR '1'='1)",
+      "status": "通过",
+      "details": "查询参数注入尝试被正确处理"
+    },
+    {
+      "name": "查询参数注入 (admin' --)",
+      "status": "通过",
+      "details": "查询参数注入尝试被正确处理"
+    },
+    {
+      "name": "查询参数注入 (1'; DROP TABLE users; --)",
+      "status": "通过",
+      "details": "查询参数注入尝试被正确处理"
+    },
+    {
+      "name": "查询参数注入 (1' UNION SELECT username, password FROM users --)",
+      "status": "通过",
+      "details": "查询参数注入尝试被正确处理"
+    },
+    {
+      "name": "查询参数注入 (; ls -la)",
+      "status": "通过",
+      "details": "查询参数注入尝试被正确处理"
+    },
+    {
+      "name": "查询参数注入 (& dir)",
+      "status": "通过",
+      "details": "查询参数注入尝试被正确处理"
+    },
+    {
+      "name": "查询参数注入 (| cat /etc/passwd)",
+      "status": "通过",
+      "details": "查询参数注入尝试被正确处理"
+    },
+    {
+      "name": "查询参数注入 (`cat /etc/passwd`)",
+      "status": "通过",
+      "details": "查询参数注入尝试被正确处理"
+    }
+  ],
+  "xss": [
+    {
+      "name": "存储型XSS (<script>alert('XSS')</script>)",
+      "status": "警告",
+      "details": "XSS向量在响应中未被转义或过滤"
+    },
+    {
+      "name": "存储型XSS (<img src='x' onerror='alert(\"XSS\")'>)",
+      "status": "警告",
+      "details": "XSS向量在响应中未被转义或过滤"
+    },
+    {
+      "name": "存储型XSS (<div onmouseover='alert(\"XSS\")'>XSS Test</div>)",
+      "status": "警告",
+      "details": "XSS向量在响应中未被转义或过滤"
+    },
+    {
+      "name": "存储型XSS (javascript:alert('XSS'))",
+      "status": "警告",
+      "details": "XSS向量在响应中未被转义或过滤"
+    },
+    {
+      "name": "反射型XSS (<script>alert('XSS')</script>)",
+      "status": "跳过",
+      "details": "无法访问搜索页面，状态码: 404"
+    },
+    {
+      "name": "反射型XSS (<img src='x' onerror='alert(\"XSS\")'>)",
+      "status": "跳过",
+      "details": "无法访问搜索页面，状态码: 404"
+    },
+    {
+      "name": "反射型XSS (<div onmouseover='alert(\"XSS\")'>XSS Test</div>)",
+      "status": "跳过",
+      "details": "无法访问搜索页面，状态码: 404"
+    },
+    {
+      "name": "反射型XSS (javascript:alert('XSS'))",
+      "status": "跳过",
+      "details": "无法访问搜索页面，状态码: 404"
+    }
+  ],
+  "csrf": [
+    {
+      "name": "CSRF令牌存在",
+      "status": "警告",
+      "details": "在响应中未找到CSRF令牌，可能缺少CSRF保护"
+    },
+    {
+      "name": "SameSite Cookies",
+      "status": "跳过",
+      "details": "响应中没有Set-Cookie头"
+    }
+  ],
+  "headers": [
+    {
+      "name": "X-XSS-Protection",
+      "status": "警告",
+      "details": "未设置X-XSS-Protection头"
+    },
+    {
+      "name": "X-Content-Type-Options",
+      "status": "警告",
+      "details": "未设置X-Content-Type-Options头"
+    },
+    {
+      "name": "X-Frame-Options",
+      "status": "警告",
+      "details": "未设置X-Frame-Options头"
+    },
+    {
+      "name": "Content-Security-Policy",
+      "status": "警告",
+      "details": "未设置Content-Security-Policy头"
+    },
+    {
+      "name": "Strict-Transport-Security",
+      "status": "警告",
+      "details": "未设置HSTS头"
+    },
+    {
+      "name": "服务器信息泄露",
+      "status": "通过",
+      "details": "Server头未泄露详细的服务器信息"
+    }
+  ]
+}

@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户登录 - AI模型管理平台</title>
+    <style>
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            box-sizing: border-box;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .logo svg {
+            width: 50px;
+            height: 50px;
+            fill: #0d6efd;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 24px;
+            font-weight: 500;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none; /* 默认隐藏 */
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        .form-control:focus {
+            border-color: #0d6efd;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+        }
+        .form-check {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .form-check-input {
+            margin-right: 8px;
+        }
+        .form-check-label {
+            color: #666;
+            font-size: 14px;
+        }
+        .btn-primary {
+            display: block;
+            width: 100%;
+            background-color: #0d6efd;
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #0b5ed7;
+        }
+        .register-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+        .register-link a {
+            color: #0d6efd;
+            text-decoration: none;
+        }
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+        .login-method-toggle {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .login-method-toggle button {
+            flex: 1;
+            background: none;
+            border: 1px solid #ddd;
+            padding: 8px 0;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+        }
+        .login-method-toggle button.active {
+            background-color: #e9ecef;
+            color: #0d6efd;
+            border-color: #0d6efd;
+        }
+        .login-method-toggle button:first-child {
+            border-radius: 4px 0 0 4px;
+        }
+        .login-method-toggle button:last-child {
+            border-radius: 0 4px 4px 0;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#0d6efd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M2 17L12 22L22 17" stroke="#0d6efd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M2 12L12 17L22 12" stroke="#0d6efd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+        <h1>用户登录</h1>
+        <div class="subtitle">欢迎回到AI模型管理平台</div>
+        
+        <!-- 错误信息显示区域 -->
+        <div id="errorMessage" class="error-message"></div>
+        
+        <!-- 登录方式切换 -->
+        <div class="login-method-toggle">
+            <button id="formLoginBtn" class="active">表单登录</button>
+            <button id="jsonLoginBtn">JSON登录</button>
+        </div>
+        
+        <!-- 登录表单 -->
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" class="form-control" id="username" name="username" placeholder="请输入用户名" required>
+            </div>
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" class="form-control" id="password" name="password" placeholder="请输入密码" required>
+            </div>
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="rememberMe" name="remember_me">
+                <label class="form-check-label" for="rememberMe">记住我</label>
+            </div>
+            <button type="submit" class="btn-primary" id="loginButton">登录</button>
+        </form>
+        
+        <div class="register-link">
+            没有账号？ <a href="/register" id="registerLink">立即注册</a>
+        </div>
+    </div>
+
+    <script>
+        // API端点
+        const API_BASE_URL = 'http://localhost:8000';
+        const FORM_LOGIN_URL = `${API_BASE_URL}/api/v1/auth/login`;
+        const JSON_LOGIN_URL = `${API_BASE_URL}/api/v1/auth/login/json`;
+        
+        // 获取DOM元素
+        const loginForm = document.getElementById('loginForm');
+        const errorMessage = document.getElementById('errorMessage');
+        const formLoginBtn = document.getElementById('formLoginBtn');
+        const jsonLoginBtn = document.getElementById('jsonLoginBtn');
+        const loginButton = document.getElementById('loginButton');
+        
+        // 登录方式
+        let loginMethod = 'form'; // 默认使用表单登录
+        
+        // 显示错误信息
+        function showError(message) {
+            // 确保正确处理对象和数组
+            if (typeof message === 'object' && message !== null) {
+                if (Array.isArray(message)) {
+                    message = message.join(', ');
+                } else {
+                    const messages = [];
+                    for (const key in message) {
+                        if (Array.isArray(message[key])) {
+                            messages.push(`${key}: ${message[key].join(', ')}`);
+                        } else {
+                            messages.push(`${key}: ${message[key]}`);
+                        }
+                    }
+                    message = messages.join('\n');
+                }
+            }
+            
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+        
+        // 隐藏错误信息
+        function hideError() {
+            errorMessage.style.display = 'none';
+        }
+        
+        // 设置按钮加载状态
+        function setButtonLoading(isLoading) {
+            if (isLoading) {
+                loginButton.innerHTML = '<span class="loading"></span>登录中...';
+                loginButton.disabled = true;
+            } else {
+                loginButton.innerHTML = '登录';
+                loginButton.disabled = false;
+            }
+        }
+        
+        // 切换到表单登录
+        formLoginBtn.addEventListener('click', function() {
+            loginMethod = 'form';
+            formLoginBtn.classList.add('active');
+            jsonLoginBtn.classList.remove('active');
+            hideError();
+        });
+        
+        // 切换到JSON登录
+        jsonLoginBtn.addEventListener('click', function() {
+            loginMethod = 'json';
+            jsonLoginBtn.classList.add('active');
+            formLoginBtn.classList.remove('active');
+            hideError();
+        });
+        
+        // 处理登录成功
+        function handleLoginSuccess(data) {
+            console.log('登录成功:', data);
+            
+            // 存储token和用户信息
+            localStorage.setItem('access_token', data.access_token);
+            if (data.user) {
+                localStorage.setItem('user', JSON.stringify(data.user));
+            }
+            
+            // 重定向到首页或仪表盘
+            window.location.href = '/dashboard';
+        }
+        
+        // 处理登录表单提交
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            hideError();
+            setButtonLoading(true);
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+            
+            // 验证表单
+            if (!username || !password) {
+                showError('请输入用户名和密码');
+                setButtonLoading(false);
+                return;
+            }
+            
+            // 根据登录方式选择不同的请求方法
+            if (loginMethod === 'form') {
+                // 使用表单登录（FormData）
+                const formData = new FormData();
+                formData.append('username', username);
+                formData.append('password', password);
+                formData.append('remember_me', rememberMe);
+                
+                fetch(FORM_LOGIN_URL, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => Promise.reject(err));
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    handleLoginSuccess(data);
+                })
+                .catch(error => {
+                    console.error('登录失败:', error);
+                    showError(error.detail || '登录失败，请检查用户名和密码');
+                })
+                .finally(() => {
+                    setButtonLoading(false);
+                });
+            } else {
+                // 使用JSON登录
+                const loginData = {
+                    username: username,
+                    password: password,
+                    remember_me: rememberMe
+                };
+                
+                fetch(JSON_LOGIN_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(loginData)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => Promise.reject(err));
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    handleLoginSuccess(data);
+                })
+                .catch(error => {
+                    console.error('登录失败:', error);
+                    showError(error.detail || '登录失败，请检查用户名和密码');
+                })
+                .finally(() => {
+                    setButtonLoading(false);
+                });
+            }
+        });
+        
+        // 注册链接
+        document.getElementById('registerLink').addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.href = '/register';
+        });
+        
+        // 检查API是否可访问
+        fetch(`${API_BASE_URL}/api/v1/health`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('API健康检查:', data);
+            })
+            .catch(error => {
+                console.error('API连接错误:', error);
+                showError('无法连接到服务器，请检查网络连接或联系管理员');
+            });
+    </script>
+</body>
+</html> 

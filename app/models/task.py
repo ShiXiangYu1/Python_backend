@@ -16,7 +16,6 @@ from typing import Optional, Dict, Any, TYPE_CHECKING
 
 from sqlalchemy import Column, String, DateTime, ForeignKey, Text, Integer, JSON, Enum
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import UUID
 
 from app.db.base_class import Base
 
@@ -86,7 +85,7 @@ class Task(Base):
     """
     __tablename__ = "tasks"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     name = Column(String(255), nullable=False, index=True)
     task_type = Column(String(50), nullable=False, index=True)
     status = Column(Enum(TaskStatus), default=TaskStatus.PENDING, nullable=False, index=True)
@@ -102,10 +101,10 @@ class Task(Base):
     started_at = Column(DateTime, nullable=True)
     completed_at = Column(DateTime, nullable=True)
     
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True, index=True)
+    user_id = Column(String(36), ForeignKey("user.id"), nullable=True, index=True)
     user = relationship("User", back_populates="tasks")
     
-    model_id = Column(UUID(as_uuid=True), ForeignKey("models.id"), nullable=True, index=True)
+    model_id = Column(String(36), ForeignKey("model.id"), nullable=True, index=True)
     model = relationship("Model", back_populates="tasks")
     
     def __repr__(self) -> str:

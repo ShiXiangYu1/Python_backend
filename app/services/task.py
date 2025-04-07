@@ -18,17 +18,21 @@ from sqlalchemy.future import select
 
 from app.core.celery import CeleryHelper
 from app.models.task import Task, TaskStatus, TaskPriority
-from app.services.base import BaseService
+from app.services.base import CRUDBase
 from app.services.redis_cache import redis_cache
 
 
-class TaskService(BaseService):
+class TaskService(CRUDBase):
     """
     任务服务类
     
     提供任务相关的业务逻辑实现，包括任务的创建、查询、更新和删除。
     与数据库和Celery队列交互，管理任务的生命周期。
     """
+    
+    def __init__(self):
+        """初始化任务服务，设置模型为Task"""
+        super().__init__(model=Task)
     
     async def create_task(
         self, 

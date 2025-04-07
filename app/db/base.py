@@ -13,5 +13,6 @@ from app.db.base_class import BaseModel
 from app.models.user import User, UserRole
 from app.models.api_key import APIKey
 from app.models.model import Model, ModelVersion, ModelFramework, ModelStatus
+from app.models.task import Task, TaskStatus, TaskPriority
 
 # 在此处添加其他模型的导入 

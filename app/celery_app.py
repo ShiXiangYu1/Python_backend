@@ -123,34 +123,41 @@ def get_task_queue(task_name, priority=None):
     return "default"
 
 
-# 在worker启动时打印配置信息
-@celery_app.on_after_configure.connect
-def setup_logger(sender, **kwargs):
-    """在Celery Worker配置完成后设置日志，打印配置信息"""
+# 尝试设置信号处理函数，如果不支持则忽略
+try:
+    # 在worker启动时打印配置信息
+    @celery_app.on_after_configure.connect
+    def setup_logger(sender, **kwargs):
+        """在Celery Worker配置完成后设置日志，打印配置信息"""
+        import logging
+        logger = logging.getLogger("celery")
+        logger.info("Celery worker started with configuration:")
+        logger.info(f"Broker URL: {broker_url}")
+        logger.info(f"Result Backend: {result_backend}")
+        logger.info(f"Task Queues: {[q.name for q in celery_app.conf.task_queues]}")
+
+    # 检查celery.signals是否可用
+    if hasattr(celery_app, 'signals'):
+        # 在worker初始化时的操作
+        @celery_app.signals.worker_init.connect
+        def worker_init(**kwargs):
+            """Worker初始化时的处理函数"""
+            import logging
+            logger = logging.getLogger("celery")
+            logger.info("Worker initialized")
+
+        # 在worker关闭时的操作
+        @celery_app.signals.worker_shutdown.connect
+        def worker_shutdown(**kwargs):
+            """Worker关闭时的处理函数"""
+            import logging
+            logger = logging.getLogger("celery")
+            logger.info("Worker shutting down")
+except (AttributeError, ImportError) as e:
     import logging
-    logger = logging.getLogger("celery")
-    logger.info("Celery worker started with configuration:")
-    logger.info(f"Broker URL: {broker_url}")
-    logger.info(f"Result Backend: {result_backend}")
-    logger.info(f"Task Queues: {[q.name for q in celery_app.conf.task_queues]}")
-
-
-# 在worker初始化时的操作
-@celery_app.signals.worker_init.connect
-def worker_init(**kwargs):
-    """Worker初始化时的处理函数"""
-    import logging
-    logger = logging.getLogger("celery")
-    logger.info("Worker initialized")
-
-
-# 在worker关闭时的操作
-@celery_app.signals.worker_shutdown.connect
-def worker_shutdown(**kwargs):
-    """Worker关闭时的处理函数"""
-    import logging
-    logger = logging.getLogger("celery")
-    logger.info("Worker shutting down")
+    logger = logging.getLogger(__name__)
+    logger.warning(f"Celery signals not available: {str(e)}")
+    logger.warning("Some Celery worker lifecycle events will not be logged")
 
 
 if __name__ == "__main__":

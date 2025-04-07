@@ -16,7 +16,13 @@ bcrypt==4.0.1
 sqlalchemy==2.0.23
 alembic==1.12.1
 asyncpg==0.28.0
-greenlet==3.0.1
+greenlet==0.4.17
+
+# Celery任务队列系统
+celery==5.3.4
+redis==5.0.1
+kombu==5.3.2
+flower==2.0.1
 
 # 日志和调试
 loguru==0.7.2
@@ -30,6 +36,18 @@ pytest-cov==4.1.0
 httpx==0.25.1
 aiosqlite==0.19.0
 
+# 性能和安全测试
+aiohttp==3.8.6
+matplotlib==3.8.0
+numpy==1.24.3
+psutil==5.9.5
+requests==2.31.0
+
 # 文档
 mkdocs==1.5.3
-mkdocs-material==9.3.1 
+mkdocs-material==9.3.1
+
+# 注释：如果出现网络问题，可以使用以下国内镜像源安装
+# pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+# 或
+# pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/ 
