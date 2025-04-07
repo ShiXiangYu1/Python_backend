@@ -20,9 +20,10 @@ from app.models.task import TaskStatus, TaskPriority
 class TaskBase(BaseModel):
     """
     基础任务模型
-    
+
     定义任务的基本属性，作为其他任务相关模型的基类。
     """
+
     name: str = Field(..., description="任务名称")
     task_type: str = Field(..., description="任务类型，如'model_deploy'、'model_train'等")
     priority: int = Field(TaskPriority.NORMAL, description="任务优先级，数值越大优先级越高")
@@ -32,17 +33,21 @@ class TaskBase(BaseModel):
 class TaskCreate(TaskBase):
     """
     创建任务请求模型
-    
+
     用于验证创建任务API的请求数据。
     """
-    celery_task_name: str = Field(..., description="Celery任务函数名，如'app.tasks.model_tasks.deploy_model'")
+
+    celery_task_name: str = Field(
+        ..., description="Celery任务函数名，如'app.tasks.model_tasks.deploy_model'"
+    )
     args: Optional[List[Any]] = Field(default=None, description="任务位置参数")
     kwargs: Optional[Dict[str, Any]] = Field(default=None, description="任务关键字参数")
     user_id: Optional[UUID4] = Field(default=None, description="关联的用户ID")
     model_id: Optional[UUID4] = Field(default=None, description="关联的模型ID")
-    
+
     class Config:
         """配置类"""
+
         schema_extra = {
             "example": {
                 "name": "部署模型 ResNet50",
@@ -51,7 +56,7 @@ class TaskCreate(TaskBase):
                 "args": [],
                 "kwargs": {"model_name": "resnet50", "batch_size": 32},
                 "priority": 2,
-                "model_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                "model_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
             }
         }
 
@@ -60,22 +65,26 @@ class TaskCreate(TaskBase):
 class TaskUpdate(BaseModel):
     """
     更新任务请求模型
-    
+
     用于验证更新任务API的请求数据。
     """
+
     status: Optional[str] = Field(default=None, description="任务状态")
-    progress: Optional[int] = Field(default=None, ge=0, le=100, description="任务进度，0-100的整数")
+    progress: Optional[int] = Field(
+        default=None, ge=0, le=100, description="任务进度，0-100的整数"
+    )
     result: Optional[Dict[str, Any]] = Field(default=None, description="任务结果")
     error: Optional[str] = Field(default=None, description="任务错误信息")
-    
+
     class Config:
         """配置类"""
+
         schema_extra = {
             "example": {
                 "status": "running",
                 "progress": 50,
                 "result": {"accuracy": 0.95},
-                "error": None
+                "error": None,
             }
         }
 
@@ -84,9 +93,10 @@ class TaskUpdate(BaseModel):
 class TaskQuery(BaseModel):
     """
     任务查询参数模型
-    
+
     用于验证任务列表查询API的请求参数。
     """
+
     user_id: Optional[UUID4] = Field(default=None, description="过滤用户ID")
     model_id: Optional[UUID4] = Field(default=None, description="过滤模型ID")
     status: Optional[str] = Field(default=None, description="过滤任务状态")
@@ -95,9 +105,10 @@ class TaskQuery(BaseModel):
     limit: int = Field(100, ge=1, le=500, description="分页限制数量")
     order_by: str = Field("created_at", description="排序字段")
     order_desc: bool = Field(True, description="是否降序排序")
-    
+
     class Config:
         """配置类"""
+
         schema_extra = {
             "example": {
                 "status": "pending",
@@ -105,7 +116,7 @@ class TaskQuery(BaseModel):
                 "skip": 0,
                 "limit": 10,
                 "order_by": "created_at",
-                "order_desc": True
+                "order_desc": True,
             }
         }
 
@@ -114,9 +125,10 @@ class TaskQuery(BaseModel):
 class TaskResponse(TaskBase):
     """
     任务响应模型
-    
+
     用于序列化任务API的响应数据。
     """
+
     id: UUID4 = Field(..., description="任务ID")
     status: str = Field(..., description="任务状态")
     celery_id: Optional[str] = Field(default=None, description="Celery任务ID")
@@ -128,9 +140,10 @@ class TaskResponse(TaskBase):
     completed_at: Optional[datetime] = Field(default=None, description="任务完成时间")
     user_id: Optional[UUID4] = Field(default=None, description="关联的用户ID")
     model_id: Optional[UUID4] = Field(default=None, description="关联的模型ID")
-    
+
     class Config:
         """配置类"""
+
         orm_mode = True
         schema_extra = {
             "example": {
@@ -147,7 +160,7 @@ class TaskResponse(TaskBase):
                 "started_at": "2023-01-01T12:01:00Z",
                 "completed_at": None,
                 "user_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                "model_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                "model_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
             }
         }
 
@@ -156,18 +169,20 @@ class TaskResponse(TaskBase):
 class TaskCountResponse(BaseModel):
     """
     任务统计响应模型
-    
+
     用于序列化任务统计API的响应数据。
     """
+
     total: int = Field(..., description="任务总数")
     pending: int = Field(..., description="待处理任务数")
     running: int = Field(..., description="执行中任务数")
     succeeded: int = Field(..., description="已成功任务数")
     failed: int = Field(..., description="已失败任务数")
     revoked: int = Field(..., description="已取消任务数")
-    
+
     class Config:
         """配置类"""
+
         schema_extra = {
             "example": {
                 "total": 100,
@@ -175,6 +190,6 @@ class TaskCountResponse(BaseModel):
                 "running": 5,
                 "succeeded": 80,
                 "failed": 3,
-                "revoked": 2
+                "revoked": 2,
             }
-        } 
+        }

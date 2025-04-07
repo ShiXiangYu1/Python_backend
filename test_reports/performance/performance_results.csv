@@ -1,0 +1,4 @@
+endpoint,concurrency,request_count,successful_requests,failed_requests,success_rate,avg_response_time_ms,median_response_time_ms,min_response_time_ms,max_response_time_ms,p95_response_time_ms,rps
+获取当前用户,50,200,200,0,100.00%,1033.64,1040.86,844.53,1190.63,1167.86,577.86
+获取AI模型列表,50,200,200,0,100.00%,3962.59,3186.70,1029.71,9673.05,9581.12,23.14
+健康检查,50,200,200,0,100.00%,1153.66,900.42,658.72,2038.15,1995.80,144.99

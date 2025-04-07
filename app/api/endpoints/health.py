@@ -26,13 +26,13 @@ router = APIRouter()
 async def health_check(db: Annotated[AsyncSession, Depends(get_db)]) -> Dict[str, Any]:
     """
     健康检查端点
-    
+
     检查应用的健康状态，包括数据库连接和系统版本。
     主要用于容器化环境中的健康检查。
-    
+
     参数:
         db: 数据库会话
-        
+
     返回:
         Dict[str, Any]: 健康状态信息
     """
@@ -43,7 +43,7 @@ async def health_check(db: Annotated[AsyncSession, Depends(get_db)]) -> Dict[str
         "version": settings.PROJECT_VERSION,
         "environment": settings.APP_ENV,
     }
-    
+
     # 检查数据库连接
     try:
         # 简单的数据库查询以验证连接
@@ -53,5 +53,5 @@ async def health_check(db: Annotated[AsyncSession, Depends(get_db)]) -> Dict[str
         status_info["status"] = "unhealthy"
         status_info["database"] = "disconnected"
         status_info["database_error"] = str(e)
-    
-    return status_info 
+
+    return status_info

@@ -23,25 +23,33 @@ logger = logging.getLogger(__name__)
 
 
 @shared_task(bind=True, base=SQLAlchemyTask)
-def system_health_check(self, components: Optional[List[str]] = None, task_id: Optional[str] = None) -> Dict[str, Any]:
+def system_health_check(
+    self, components: Optional[List[str]] = None, task_id: Optional[str] = None
+) -> Dict[str, Any]:
     """
     系统健康检查任务
-    
+
     检查系统各组件的运行状态。
-    
+
     参数:
         components: 要检查的组件列表，如果为None则检查所有组件
         task_id: 数据库中的任务ID
-        
+
     返回:
         Dict[str, Any]: 健康检查结果
     """
     logger.info("开始系统健康检查")
-    
+
     # 如果未指定组件，默认检查所有组件
     if not components:
-        components = ["database", "redis", "model_service", "file_storage", "api_gateway"]
-    
+        components = [
+            "database",
+            "redis",
+            "model_service",
+            "file_storage",
+            "api_gateway",
+        ]
+
     # 初始化结果
     result = {
         "success": True,
@@ -50,10 +58,11 @@ def system_health_check(self, components: Optional[List[str]] = None, task_id: O
         "healthy_components": 0,
         "unhealthy_components": 0,
     }
-    
+
     # 如果提供了task_id，更新任务状态
     if task_id:
         import asyncio
+
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(
@@ -65,15 +74,16 @@ def system_health_check(self, components: Optional[List[str]] = None, task_id: O
             )
         )
         loop.close()
-    
+
     # 检查每个组件
     for i, component in enumerate(components):
         # 计算进度
         progress = int((i + 1) / len(components) * 100)
-        
+
         # 更新任务进度
         if task_id:
             import asyncio
+
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             loop.run_until_complete(
@@ -85,24 +95,24 @@ def system_health_check(self, components: Optional[List[str]] = None, task_id: O
                 )
             )
             loop.close()
-        
+
         # 模拟组件检查
         # 这里应该是实际检查各组件健康状态的逻辑
         time.sleep(0.5)
-        
+
         # 模拟检查结果（在实际环境中，这应该是真实的健康检查）
         # 为了示例，我们随机生成一些健康状态
         import random
-        
+
         is_healthy = random.random() > 0.1  # 90%概率健康
-        
+
         # 记录检查结果
         component_result = {
             "healthy": is_healthy,
             "response_time_ms": random.randint(5, 100),
             "check_time": time.strftime("%Y-%m-%d %H:%M:%S"),
         }
-        
+
         # 如果不健康，添加错误信息
         if not is_healthy:
             component_result["error"] = "组件响应时间过长"
@@ -110,13 +120,14 @@ def system_health_check(self, components: Optional[List[str]] = None, task_id: O
             result["unhealthy_components"] += 1
         else:
             result["healthy_components"] += 1
-        
+
         # 添加到结果中
         result["components"][component] = component_result
-    
+
     # 更新任务状态为成功
     if task_id:
         import asyncio
+
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(
@@ -128,42 +139,42 @@ def system_health_check(self, components: Optional[List[str]] = None, task_id: O
             )
         )
         loop.close()
-    
+
     logger.info(f"系统健康检查完成，结果: {'全部正常' if result['success'] else '发现问题'}")
-    
+
     return result
 
 
 @shared_task(bind=True, base=SQLAlchemyTask)
 def emergency_alert(
-    self, 
+    self,
     alert_type: str,
-    message: str, 
+    message: str,
     severity: str = "critical",
     affected_components: Optional[List[str]] = None,
     task_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     紧急警报任务
-    
+
     处理系统紧急情况并发送警报。
-    
+
     参数:
         alert_type: 警报类型，如"security"、"performance"、"availability"
         message: 警报消息
         severity: 严重程度，可以是"critical"、"high"、"medium"、"low"
         affected_components: 受影响的组件列表
         task_id: 数据库中的任务ID
-        
+
     返回:
         Dict[str, Any]: 警报处理结果
     """
     logger.warning(f"收到紧急警报: {alert_type}, 严重程度: {severity}, 消息: {message}")
-    
+
     # 如果未指定受影响组件，设为空列表
     if affected_components is None:
         affected_components = []
-    
+
     # 初始化结果
     result = {
         "success": False,
@@ -173,10 +184,11 @@ def emergency_alert(
         "affected_components": affected_components,
         "alert_time": time.strftime("%Y-%m-%d %H:%M:%S"),
     }
-    
+
     # 如果提供了task_id，更新任务状态
     if task_id:
         import asyncio
+
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(
@@ -188,7 +200,7 @@ def emergency_alert(
             )
         )
         loop.close()
-    
+
     try:
         # 模拟警报处理
         # 这里应该是实际处理警报的逻辑，如：
@@ -196,7 +208,7 @@ def emergency_alert(
         # 2. 发送通知给管理员
         # 3. 触发自动修复流程
         # 4. 更新监控系统状态
-        
+
         # 模拟处理步骤
         steps = [
             "记录警报到日志系统",
@@ -205,14 +217,15 @@ def emergency_alert(
             "执行缓解措施",
             "更新监控系统",
         ]
-        
+
         for i, step in enumerate(steps):
             # 计算进度
             progress = int((i + 1) / len(steps) * 100)
-            
+
             # 更新任务进度
             if task_id:
                 import asyncio
+
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
                 loop.run_until_complete(
@@ -224,17 +237,18 @@ def emergency_alert(
                     )
                 )
                 loop.close()
-            
+
             # 模拟处理时间
             time.sleep(0.5)
-        
+
         # 处理成功
         result["success"] = True
         result["resolution"] = "警报已处理，已采取必要措施"
-        
+
         # 更新任务状态为成功
         if task_id:
             import asyncio
+
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             loop.run_until_complete(
@@ -246,19 +260,20 @@ def emergency_alert(
                 )
             )
             loop.close()
-        
+
         logger.info(f"紧急警报已处理: {alert_type}")
-        
+
     except Exception as e:
         logger.error(f"处理紧急警报失败: {str(e)}")
-        
+
         # 更新结果
         result["success"] = False
         result["error"] = str(e)
-        
+
         # 更新任务状态为失败
         if task_id:
             import asyncio
+
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             loop.run_until_complete(
@@ -270,5 +285,5 @@ def emergency_alert(
                 )
             )
             loop.close()
-    
-    return result 
+
+    return result

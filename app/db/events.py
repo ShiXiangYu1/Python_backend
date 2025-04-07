@@ -23,27 +23,27 @@ from app.db.session import get_db, engine, async_session_maker
 async def connect_to_db(app: FastAPI) -> None:
     """
     连接到数据库
-    
+
     在应用启动时建立数据库连接，并将连接对象保存到应用状态中。
-    
+
     参数:
         app: FastAPI应用实例
-        
+
     返回:
         None
     """
     try:
         # 将会话制造工厂添加到应用状态
         app.state.db_session_maker = async_session_maker
-        
+
         # 测试连接
         async with engine.connect() as conn:
-            await conn.execute(text('SELECT 1'))
-            
+            await conn.execute(text("SELECT 1"))
+
             # 由于AsyncEngine没有get_engine_status方法，直接设置连接状态
             # 设置当前连接数为1
             set_db_connections(1)
-        
+
         logging.info("数据库连接成功")
     except Exception as e:
         logging.error(f"数据库连接失败: {e}")
@@ -53,12 +53,12 @@ async def connect_to_db(app: FastAPI) -> None:
 async def close_db_connection(app: FastAPI) -> None:
     """
     关闭数据库连接
-    
+
     在应用关闭时释放数据库连接资源。
-    
+
     参数:
         app: FastAPI应用实例
-        
+
     返回:
         None
     """
@@ -69,4 +69,4 @@ async def close_db_connection(app: FastAPI) -> None:
         logging.info("数据库连接已关闭")
     except Exception as e:
         logging.error(f"关闭数据库连接时出错: {e}")
-        raise 
+        raise

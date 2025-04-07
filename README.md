@@ -240,12 +240,63 @@ class SQLAlchemyTask(Task):
 
 ## 测试
 
-系统包含完整的单元测试，覆盖API和Celery任务：
+### 单元测试
+
+项目使用pytest框架进行单元测试，测试代码位于`tests/unit`目录下。
+
+#### 运行单元测试
+
+可以使用提供的批处理脚本运行测试：
 
 ```bash
-# 运行测试
-pytest
+# 运行所有单元测试
+run_unit_tests.bat
+
+# 运行所有单元测试（详细输出）
+run_unit_tests.bat -v
+
+# 运行特定测试文件
+run_unit_tests.bat tests/unit/test_task_status_update.py
 ```
+
+也可以直接使用pytest运行：
+
+```bash
+# 运行所有单元测试
+pytest tests/unit
+
+# 运行特定测试文件
+pytest tests/unit/test_task_status_update.py
+```
+
+#### 测试覆盖率
+
+使用pytest-cov插件可以检查测试覆盖率：
+
+```bash
+# 安装pytest-cov
+pip install pytest-cov
+
+# 检查覆盖率
+pytest --cov=app tests/unit
+
+# 生成HTML覆盖率报告
+pytest --cov=app --cov-report=html tests/unit
+```
+
+### 集成测试
+
+项目的集成测试位于`tests/integration`目录下，用于测试系统组件之间的交互。
+
+### 性能测试
+
+性能测试脚本位于项目根目录：
+
+- `performance_test.py`: 测试API端点的响应时间和并发性能
+- `security_test.py`: 测试系统安全性，包括XSS、CSRF等
+- `run_tests.py`: 运行所有测试并生成综合报告
+
+详细信息请参阅`TEST_README.md`文件。
 
 ## 开发指南
 

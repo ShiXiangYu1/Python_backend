@@ -11,4 +11,4 @@ Web前端路由模块
 from fastapi import APIRouter
 from app.web.routes import web_router
 
-__all__ = ["web_router"] 
+__all__ = ["web_router"]

@@ -1,0 +1,82 @@
+{
+  "authentication": [
+    {
+      "name": "未认证访问保护资源",
+      "status": "错误",
+      "details": "测试过程发生错误: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /api/v1/users/me (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025B204FCEE0>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))"
+    },
+    {
+      "name": "无效令牌认证",
+      "status": "错误",
+      "details": "测试过程发生错误: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /api/v1/users/me (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025B2051C8B0>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))"
+    },
+    {
+      "name": "暴力破解防护",
+      "status": "错误",
+      "details": "测试过程发生错误: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /api/v1/auth/login/json (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025B20526310>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))"
+    }
+  ],
+  "injection": [
+    {
+      "name": "登录SQL注入 (' OR '1'='1)",
+      "status": "错误",
+      "details": "测试过程发生错误: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /api/v1/auth/login (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025B2051C2B0>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))"
+    },
+    {
+      "name": "登录SQL注入 (admin' --)",
+      "status": "错误",
+      "details": "测试过程发生错误: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /api/v1/auth/login (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025B20497040>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))"
+    },
+    {
+      "name": "登录SQL注入 (1'; DROP TABLE users; --)",
+      "status": "错误",
+      "details": "测试过程发生错误: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /api/v1/auth/login (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025B204FCD30>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))"
+    },
+    {
+      "name": "登录SQL注入 (1' UNION SELECT username, password FROM users --)",
+      "status": "错误",
+      "details": "测试过程发生错误: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /api/v1/auth/login (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025B205262B0>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))"
+    }
+  ],
+  "xss": [
+    {
+      "name": "存储型XSS (<script>alert('XSS')</script>)",
+      "status": "错误",
+      "details": "测试过程发生错误: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /api/v1/auth/register (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025B20526DF0>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))"
+    },
+    {
+      "name": "存储型XSS (<img src='x' onerror='alert(\"XSS\")'>)",
+      "status": "错误",
+      "details": "测试过程发生错误: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /api/v1/auth/register (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025B204FC3A0>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))"
+    },
+    {
+      "name": "存储型XSS (<div onmouseover='alert(\"XSS\")'>XSS Test</div>)",
+      "status": "错误",
+      "details": "测试过程发生错误: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /api/v1/auth/register (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025B204A3910>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))"
+    },
+    {
+      "name": "存储型XSS (javascript:alert('XSS'))",
+      "status": "错误",
+      "details": "测试过程发生错误: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /api/v1/auth/register (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025B20526CA0>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))"
+    }
+  ],
+  "csrf": [
+    {
+      "name": "CSRF测试",
+      "status": "错误",
+      "details": "测试过程发生错误: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /dashboard (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025B205264C0>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))"
+    },
+    {
+      "name": "SameSite Cookies测试",
+      "status": "错误",
+      "details": "测试过程发生错误: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025B2051CFA0>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))"
+    }
+  ],
+  "headers": [
+    {
+      "name": "HTTP头测试",
+      "status": "错误",
+      "details": "测试过程发生错误: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025B2052E790>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))"
+    }
+  ]
+}

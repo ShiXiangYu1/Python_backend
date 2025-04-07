@@ -2,11 +2,15 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyo
+*.pyd
 
 # 虚拟环境
 venv/
 env/
 ENV/
+.Python
+*.so
 
 # 分发/打包
 dist/
@@ -49,6 +53,10 @@ model_uploads/
 # 数据库
 *.db
 *.sqlite3
+
+# 离线依赖包
+local_packages/*
+!local_packages/README.md
 
 # 其他
 .DS_Store

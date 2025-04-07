@@ -95,7 +95,7 @@ CREATE_TABLES_SQL = {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES user (id)
         );
-    """
+    """,
 }
 
 # 插入示例数据SQL
@@ -124,7 +124,7 @@ SAMPLE_DATA_SQL = {
             true,
             'user'
         );
-        """
+        """,
     ],
     "model": [
         """
@@ -171,7 +171,7 @@ SAMPLE_DATA_SQL = {
             456000000,
             '00000000-0000-0000-0000-000000000002'
         );
-        """
+        """,
     ],
     "api_key": [
         """
@@ -195,7 +195,7 @@ SAMPLE_DATA_SQL = {
             true,
             '00000000-0000-0000-0000-000000000002'
         );
-        """
+        """,
     ],
     "model_version": [
         """
@@ -221,24 +221,26 @@ SAMPLE_DATA_SQL = {
             98000000,
             'active'
         );
-        """
-    ]
+        """,
+    ],
 }
+
 
 def log(message, level="INFO"):
     """简单的日志输出函数"""
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print(f"[{timestamp}] {level}: {message}")
 
+
 def init_db():
     """初始化数据库，创建表并插入示例数据"""
     log(f"正在初始化数据库 {DB_PATH}...")
-    
+
     # 检查数据库文件所在目录是否存在
     db_dir = os.path.dirname(DB_PATH)
     if db_dir and not os.path.exists(db_dir):
         os.makedirs(db_dir)
-    
+
     # 连接数据库
     try:
         conn = sqlite3.connect(DB_PATH)
@@ -247,7 +249,7 @@ def init_db():
     except sqlite3.Error as e:
         log(f"连接数据库失败: {e}", "ERROR")
         sys.exit(1)
-    
+
     try:
         # 创建表
         log("正在创建数据库表...")
@@ -257,7 +259,7 @@ def init_db():
                 log(f"表 {table_name} 已创建或已存在")
             except sqlite3.Error as e:
                 log(f"创建表 {table_name} 失败: {e}", "ERROR")
-        
+
         # 插入示例数据
         log("正在插入示例数据...")
         for table_name, sqls in SAMPLE_DATA_SQL.items():
@@ -267,7 +269,7 @@ def init_db():
                     log(f"表 {table_name} 示例数据已插入或已存在")
                 except sqlite3.Error as e:
                     log(f"插入 {table_name} 数据失败: {e}", "WARNING")
-        
+
         # 提交更改
         conn.commit()
         log("所有更改已提交到数据库")
@@ -279,29 +281,30 @@ def init_db():
         # 关闭连接
         conn.close()
         log("数据库连接已关闭")
-    
+
     log("数据库初始化完成！✓", "SUCCESS")
-    
+
     # 显示数据库信息
     log("\n数据库信息:")
     try:
         conn = sqlite3.connect(DB_PATH)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
-        
+
         # 获取所有表
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-        tables = [row['name'] for row in cursor.fetchall()]
-        
+        tables = [row["name"] for row in cursor.fetchall()]
+
         # 获取每个表的行数
         for table in tables:
             cursor.execute(f"SELECT COUNT(*) as count FROM {table};")
-            count = cursor.fetchone()['count']
+            count = cursor.fetchone()["count"]
             log(f"表 {table}: {count} 行")
-            
+
         conn.close()
     except sqlite3.Error as e:
         log(f"获取数据库信息失败: {e}", "ERROR")
 
+
 if __name__ == "__main__":
-    init_db() 
+    init_db()

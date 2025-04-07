@@ -20,9 +20,10 @@ from app.models.model import ModelFramework, ModelStatus
 class ModelBase(BaseModel):
     """
     模型基础Schema
-    
+
     包含AI模型的基本信息，作为创建和更新Schema的基类。
     """
+
     name: str = Field(..., min_length=1, max_length=100, description="模型名称")
     description: Optional[str] = Field(None, description="模型描述")
     framework: ModelFramework = Field(ModelFramework.CUSTOM, description="模型框架")
@@ -34,10 +35,11 @@ class ModelBase(BaseModel):
 class ModelCreate(ModelBase):
     """
     创建模型Schema
-    
+
     用于创建新AI模型的请求数据模型。
     实际文件上传通过表单处理，而不是JSON。
     """
+
     pass
 
 
@@ -45,9 +47,10 @@ class ModelCreate(ModelBase):
 class ModelUpdate(BaseModel):
     """
     更新模型Schema
-    
+
     用于更新AI模型信息的请求数据模型，所有字段都是可选的。
     """
+
     name: Optional[str] = Field(None, min_length=1, max_length=100, description="模型名称")
     description: Optional[str] = Field(None, description="模型描述")
     framework: Optional[ModelFramework] = Field(None, description="模型框架")
@@ -58,9 +61,10 @@ class ModelUpdate(BaseModel):
 class ModelDeploy(BaseModel):
     """
     模型部署Schema
-    
+
     用于部署AI模型的请求数据模型，包含部署配置信息。
     """
+
     config: Dict[str, Any] = Field({}, description="部署配置")
 
 
@@ -68,9 +72,10 @@ class ModelDeploy(BaseModel):
 class ModelInDB(ModelBase):
     """
     数据库模型Schema
-    
+
     表示数据库中存储的AI模型完整信息。
     """
+
     id: str = Field(..., description="模型ID")
     owner_id: str = Field(..., description="所有者ID")
     file_path: Optional[str] = Field(None, description="模型文件路径")
@@ -82,9 +87,10 @@ class ModelInDB(ModelBase):
     latency: Optional[float] = Field(None, description="延迟(毫秒)")
     created_at: datetime = Field(..., description="创建时间")
     updated_at: datetime = Field(..., description="更新时间")
-    
+
     class Config:
         """Pydantic配置类"""
+
         orm_mode = True
 
 
@@ -92,9 +98,10 @@ class ModelInDB(ModelBase):
 class Model(ModelBase):
     """
     模型响应Schema
-    
+
     用于API响应的AI模型信息模型。
     """
+
     id: str = Field(..., description="模型ID")
     owner_id: str = Field(..., description="所有者ID")
     file_name: Optional[str] = Field(None, description="模型文件名")
@@ -105,9 +112,10 @@ class Model(ModelBase):
     latency: Optional[float] = Field(None, description="延迟(毫秒)")
     created_at: datetime = Field(..., description="创建时间")
     updated_at: datetime = Field(..., description="更新时间")
-    
+
     class Config:
         """Pydantic配置类"""
+
         orm_mode = True
 
 
@@ -115,9 +123,10 @@ class Model(ModelBase):
 class ModelList(BaseModel):
     """
     模型列表Schema
-    
+
     用于返回AI模型列表的响应数据模型。
     """
+
     items: List[Model] = Field(..., description="模型列表")
     total: int = Field(..., description="总数")
 
@@ -126,9 +135,10 @@ class ModelList(BaseModel):
 class ModelVersionBase(BaseModel):
     """
     模型版本基础Schema
-    
+
     包含AI模型版本的基本信息。
     """
+
     version: str = Field(..., description="版本号")
     change_log: Optional[str] = Field(None, description="变更日志")
 
@@ -137,10 +147,11 @@ class ModelVersionBase(BaseModel):
 class ModelVersionCreate(ModelVersionBase):
     """
     创建模型版本Schema
-    
+
     用于创建新AI模型版本的请求数据模型。
     实际文件上传通过表单处理，而不是JSON。
     """
+
     pass
 
 
@@ -148,9 +159,10 @@ class ModelVersionCreate(ModelVersionBase):
 class ModelVersionUpdate(BaseModel):
     """
     更新模型版本Schema
-    
+
     用于更新AI模型版本信息的请求数据模型，所有字段都是可选的。
     """
+
     change_log: Optional[str] = Field(None, description="变更日志")
     is_current: Optional[bool] = Field(None, description="是否为当前版本")
 
@@ -159,9 +171,10 @@ class ModelVersionUpdate(BaseModel):
 class ModelVersionInDB(ModelVersionBase):
     """
     数据库模型版本Schema
-    
+
     表示数据库中存储的AI模型版本完整信息。
     """
+
     id: str = Field(..., description="版本ID")
     parent_model_id: str = Field(..., description="所属模型ID")
     file_path: Optional[str] = Field(None, description="模型文件路径")
@@ -171,9 +184,10 @@ class ModelVersionInDB(ModelVersionBase):
     is_current: bool = Field(..., description="是否为当前版本")
     created_at: datetime = Field(..., description="创建时间")
     updated_at: datetime = Field(..., description="更新时间")
-    
+
     class Config:
         """Pydantic配置类"""
+
         orm_mode = True
 
 
@@ -181,9 +195,10 @@ class ModelVersionInDB(ModelVersionBase):
 class ModelVersion(ModelVersionBase):
     """
     模型版本响应Schema
-    
+
     用于API响应的AI模型版本信息模型。
     """
+
     id: str = Field(..., description="版本ID")
     parent_model_id: str = Field(..., description="所属模型ID")
     file_size: Optional[int] = Field(None, description="模型文件大小(字节)")
@@ -191,9 +206,10 @@ class ModelVersion(ModelVersionBase):
     is_current: bool = Field(..., description="是否为当前版本")
     created_at: datetime = Field(..., description="创建时间")
     updated_at: datetime = Field(..., description="更新时间")
-    
+
     class Config:
         """Pydantic配置类"""
+
         orm_mode = True
 
 
@@ -201,8 +217,9 @@ class ModelVersion(ModelVersionBase):
 class ModelVersionList(BaseModel):
     """
     模型版本列表Schema
-    
+
     用于返回AI模型版本列表的响应数据模型。
     """
+
     items: List[ModelVersion] = Field(..., description="版本列表")
-    total: int = Field(..., description="总数") 
+    total: int = Field(..., description="总数")

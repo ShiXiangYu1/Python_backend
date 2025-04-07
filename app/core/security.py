@@ -23,20 +23,18 @@ from app.core.config import settings
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # OAuth2密码流认证
-oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl=f"{settings.API_PREFIX}/auth/login"
-)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_PREFIX}/auth/login")
 
 
 def create_password_hash(password: str) -> str:
     """
     创建密码哈希
-    
+
     对原始密码进行哈希处理，用于安全存储。
-    
+
     参数:
         password: 原始密码
-        
+
     返回:
         str: 密码哈希值
     """
@@ -46,13 +44,13 @@ def create_password_hash(password: str) -> str:
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
     验证密码
-    
+
     验证原始密码是否与存储的哈希匹配。
-    
+
     参数:
         plain_password: 原始密码
         hashed_password: 存储的密码哈希
-        
+
     返回:
         bool: 密码是否匹配
     """
@@ -64,13 +62,13 @@ def create_access_token(
 ) -> str:
     """
     创建访问令牌
-    
+
     生成包含用户身份和过期时间的JWT令牌。
-    
+
     参数:
         subject: 令牌主体，通常是用户ID
         expires_delta: 令牌有效期
-        
+
     返回:
         str: 编码后的JWT令牌
     """
@@ -80,37 +78,33 @@ def create_access_token(
         expire = datetime.utcnow() + timedelta(
             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
         )
-    
+
     to_encode = {"exp": expire, "sub": str(subject)}
     encoded_jwt = jwt.encode(
-        to_encode,
-        settings.JWT_SECRET_KEY,
-        algorithm=settings.JWT_ALGORITHM
+        to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
     )
-    
+
     return encoded_jwt
 
 
 def verify_token(token: str) -> dict:
     """
     验证令牌
-    
+
     解码并验证JWT令牌的有效性。
-    
+
     参数:
         token: JWT令牌
-        
+
     返回:
         dict: 解码后的令牌载荷
-        
+
     异常:
         HTTPException: 当令牌无效或过期时
     """
     try:
         payload = jwt.decode(
-            token,
-            settings.JWT_SECRET_KEY,
-            algorithms=[settings.JWT_ALGORITHM]
+            token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
         )
         return payload
     except jwt.JWTError:
@@ -118,4 +112,4 @@ def verify_token(token: str) -> dict:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="无效的认证凭据",
             headers={"WWW-Authenticate": "Bearer"},
-        ) 
+        )

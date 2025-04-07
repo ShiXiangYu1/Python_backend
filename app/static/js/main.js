@@ -13,6 +13,9 @@
         // 初始化工具提示
         initTooltips();
         
+        // 设置CSRF令牌
+        setupCSRFToken();
+        
         // 处理认证状态
         handleAuth();
         
@@ -32,6 +35,32 @@
         tooltipTriggerList.map(function(tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl);
         });
+    }
+    
+    /**
+     * 设置CSRF令牌，确保所有ajax请求都包含CSRF令牌
+     */
+    function setupCSRFToken() {
+        // 从meta标签获取CSRF令牌
+        const metaTag = document.querySelector('meta[name="csrf-token"]');
+        if (metaTag) {
+            const csrfToken = metaTag.getAttribute('content');
+            
+            // 为所有axios请求添加CSRF令牌
+            axios.defaults.headers.common['X-CSRF-Token'] = csrfToken;
+            
+            // 添加请求拦截器，确保每个请求都包含最新的CSRF令牌
+            axios.interceptors.request.use(function (config) {
+                config.headers['X-CSRF-Token'] = csrfToken;
+                return config;
+            }, function (error) {
+                return Promise.reject(error);
+            });
+            
+            console.log('CSRF令牌已设置');
+        } else {
+            console.warn('未找到CSRF令牌元素');
+        }
     }
     
     /**

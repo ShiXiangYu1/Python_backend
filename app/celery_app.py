@@ -33,23 +33,18 @@ celery_app.conf.update(
     # 时区设置
     timezone="Asia/Shanghai",
     enable_utc=True,
-    
     # 任务执行设置
     task_serializer="json",
     accept_content=["json"],
     result_serializer="json",
-    
     # 结果过期时间
     result_expires=3600 * 24 * 7,  # 7天
-    
     # 任务跟踪
     task_track_started=True,
     task_ignore_result=False,
-    
     # 任务重试
     task_acks_late=True,
     task_reject_on_worker_lost=True,
-    
     # 定时任务配置
     beat_schedule={
         "system-health-check-every-hour": {
@@ -65,31 +60,42 @@ celery_app.conf.update(
             "options": {"queue": "low_priority"},
         },
     },
-    
     # 默认的任务队列
     task_default_queue="default",
-    
     # 定义交换机
     task_queues=(
-        Queue("high_priority", Exchange("high_priority"), routing_key="high_priority.*"),
+        Queue(
+            "high_priority", Exchange("high_priority"), routing_key="high_priority.*"
+        ),
         Queue("default", Exchange("default"), routing_key="default.*"),
         Queue("low_priority", Exchange("low_priority"), routing_key="low_priority.*"),
     ),
-    
     # 任务路由
     task_routes={
         # 高优先级任务
-        "app.tasks.high_priority_tasks.*": {"queue": "high_priority", "routing_key": "high_priority.tasks"},
-        
+        "app.tasks.high_priority_tasks.*": {
+            "queue": "high_priority",
+            "routing_key": "high_priority.tasks",
+        },
         # 默认任务
-        "app.tasks.common_tasks.*": {"queue": "default", "routing_key": "default.tasks"},
-        
+        "app.tasks.common_tasks.*": {
+            "queue": "default",
+            "routing_key": "default.tasks",
+        },
         # 低优先级任务
-        "app.tasks.low_priority_tasks.*": {"queue": "low_priority", "routing_key": "low_priority.tasks"},
-        
+        "app.tasks.low_priority_tasks.*": {
+            "queue": "low_priority",
+            "routing_key": "low_priority.tasks",
+        },
         # 模型相关任务（可根据具体需求设置优先级）
-        "app.tasks.model_tasks.deploy_model": {"queue": "high_priority", "routing_key": "high_priority.model"},
-        "app.tasks.model_tasks.validate_model": {"queue": "default", "routing_key": "default.model"},
+        "app.tasks.model_tasks.deploy_model": {
+            "queue": "high_priority",
+            "routing_key": "high_priority.model",
+        },
+        "app.tasks.model_tasks.validate_model": {
+            "queue": "default",
+            "routing_key": "default.model",
+        },
     },
 )
 
@@ -98,14 +104,14 @@ celery_app.conf.update(
 def get_task_queue(task_name, priority=None):
     """
     根据任务名称和优先级获取队列名称
-    
+
     根据设定的路由规则，将任务分配到合适的队列。如果指定了优先级，
     则会覆盖默认路由规则。
-    
+
     参数:
         task_name: 任务名称
         priority: 任务优先级 (high, normal, low)
-        
+
     返回:
         str: 队列名称
     """
@@ -113,13 +119,13 @@ def get_task_queue(task_name, priority=None):
         return "high_priority"
     elif priority == "low":
         return "low_priority"
-    
+
     # 使用任务路由规则
     routes = celery_app.conf.task_routes or {}
     for pattern, route in routes.items():
         if task_name.startswith(pattern.replace(".*", "")):
             return route.get("queue", "default")
-    
+
     return "default"
 
 
@@ -130,6 +136,7 @@ try:
     def setup_logger(sender, **kwargs):
         """在Celery Worker配置完成后设置日志，打印配置信息"""
         import logging
+
         logger = logging.getLogger("celery")
         logger.info("Celery worker started with configuration:")
         logger.info(f"Broker URL: {broker_url}")
@@ -137,12 +144,13 @@ try:
         logger.info(f"Task Queues: {[q.name for q in celery_app.conf.task_queues]}")
 
     # 检查celery.signals是否可用
-    if hasattr(celery_app, 'signals'):
+    if hasattr(celery_app, "signals"):
         # 在worker初始化时的操作
         @celery_app.signals.worker_init.connect
         def worker_init(**kwargs):
             """Worker初始化时的处理函数"""
             import logging
+
             logger = logging.getLogger("celery")
             logger.info("Worker initialized")
 
@@ -151,14 +159,17 @@ try:
         def worker_shutdown(**kwargs):
             """Worker关闭时的处理函数"""
             import logging
+
             logger = logging.getLogger("celery")
             logger.info("Worker shutting down")
+
 except (AttributeError, ImportError) as e:
     import logging
+
     logger = logging.getLogger(__name__)
     logger.warning(f"Celery signals not available: {str(e)}")
     logger.warning("Some Celery worker lifecycle events will not be logged")
 
 
 if __name__ == "__main__":
-    celery_app.start() 
+    celery_app.start()
