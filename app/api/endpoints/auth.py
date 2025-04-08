@@ -10,8 +10,9 @@
 
 from datetime import timedelta
 from typing_extensions import Annotated
+from typing import Dict
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -231,3 +232,26 @@ async def password_change(
     )
 
     return Message(detail="密码已成功修改")
+
+
+@router.get("/csrf-token", response_model=Dict[str, str])
+async def get_csrf_token(request: Request) -> Dict[str, str]:
+    """
+    获取CSRF令牌
+    
+    此端点用于前端获取CSRF令牌，并直接在响应中返回令牌值。
+    同时，CSRFMiddleware也会将令牌设置在cookie中。
+    
+    返回:
+        Dict[str, str]: 包含CSRF令牌的字典
+    """
+    # 从请求状态中获取CSRF令牌
+    csrf_token = getattr(request.state, "csrf_token", "")
+    
+    # 如果令牌不存在，说明中间件可能尚未设置令牌
+    if not csrf_token:
+        # 返回消息，提示前端刷新页面
+        return {"detail": "CSRF令牌未设置，请刷新页面重试", "token": ""}
+    
+    # 返回包含令牌的响应
+    return {"detail": "CSRF令牌获取成功", "token": csrf_token}

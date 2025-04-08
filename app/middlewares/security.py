@@ -40,9 +40,11 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "SAMEORIGIN"
+        
+        # 更新CSP策略，允许从CDN加载资源
         response.headers[
             "Content-Security-Policy"
-        ] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;"
+        ] = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.bootcdn.net; style-src 'self' 'unsafe-inline' https://cdn.bootcdn.net; img-src 'self' data:;"
 
         # 始终添加HSTS头部，即使在开发环境也添加，以确保测试通过
         response.headers[
@@ -87,7 +89,7 @@ class CSRFMiddleware(BaseHTTPMiddleware):
             response.set_cookie(
                 key="csrf_token",
                 value=secrets.token_hex(32),
-                httponly=True,
+                httponly=False,  # 允许JavaScript读取该cookie
                 samesite="lax",
                 secure=request.url.scheme == "https",
             )
@@ -124,7 +126,9 @@ class CSRFMiddleware(BaseHTTPMiddleware):
 
             # 令牌验证失败
             return Response(
-                content="CSRF验证失败", status_code=403, media_type="text/plain"
+                content='{"detail": "CSRF验证失败"}',
+                status_code=403,
+                media_type="application/json"
             )
 
         # 其他情况

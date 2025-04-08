@@ -215,6 +215,54 @@
         // 登录方式
         let loginMethod = 'form'; // 默认使用表单登录
         
+        // 获取CSRF令牌
+        let csrfTokenValue = ''; // 全局变量存储CSRF令牌
+        
+        // 从API获取CSRF令牌
+        async function fetchCsrfToken() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/auth/csrf-token`, {
+                    credentials: 'include' // 确保发送和接收cookie
+                });
+                const data = await response.json();
+                console.log('CSRF令牌API响应:', data);
+                
+                if (data && data.token) {
+                    // 从API响应中获取令牌
+                    csrfTokenValue = data.token;
+                    console.log('成功获取CSRF令牌');
+                    return data.token;
+                } else {
+                    console.warn('API未返回有效的CSRF令牌:', data.detail);
+                    return null;
+                }
+            } catch (error) {
+                console.error('获取CSRF令牌失败:', error);
+                return null;
+            }
+        }
+        
+        // 获取CSRF令牌（首先尝试使用已缓存的令牌，如果没有则从cookie获取）
+        function getCsrfToken() {
+            // 如果全局变量中已有令牌，直接返回
+            if (csrfTokenValue) {
+                return csrfTokenValue;
+            }
+            
+            // 尝试从cookie中获取（兼容旧方式）
+            const cookieToken = document.cookie.split('; ')
+                .find(row => row.startsWith('csrf_token='))
+                ?.split('=')[1];
+            
+            if (cookieToken) {
+                csrfTokenValue = cookieToken;
+                return cookieToken;
+            }
+            
+            // 如果都没有，返回null，调用者应该调用fetchCsrfToken
+            return null;
+        }
+        
         // 显示错误信息
         function showError(message) {
             // 确保正确处理对象和数组
@@ -285,7 +333,7 @@
         }
         
         // 处理登录表单提交
-        loginForm.addEventListener('submit', function(e) {
+        loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             hideError();
             setButtonLoading(true);
@@ -301,6 +349,28 @@
                 return;
             }
             
+            // 获取CSRF令牌
+            let csrfToken = getCsrfToken();
+            
+            // 如果没有令牌，尝试从API获取
+            if (!csrfToken) {
+                console.warn('找不到CSRF令牌，正在获取...');
+                csrfToken = await fetchCsrfToken();
+                
+                // 如果还是获取不到，显示错误
+                if (!csrfToken) {
+                    showError('无法获取CSRF令牌，请刷新页面重试');
+                    setButtonLoading(false);
+                    return;
+                }
+            }
+            
+            // 处理登录
+            processLogin(username, password, rememberMe, csrfToken);
+        });
+        
+        // 处理登录请求
+        function processLogin(username, password, rememberMe, csrfToken) {
             // 根据登录方式选择不同的请求方法
             if (loginMethod === 'form') {
                 // 使用表单登录（FormData）
@@ -308,23 +378,74 @@
                 formData.append('username', username);
                 formData.append('password', password);
                 formData.append('remember_me', rememberMe);
+                formData.append('csrf_token', csrfToken); // 添加CSRF令牌到表单数据
                 
                 fetch(FORM_LOGIN_URL, {
                     method: 'POST',
-                    body: formData
+                    headers: {
+                        'X-CSRF-Token': csrfToken  // 同时添加到头部
+                    },
+                    body: formData,
+                    credentials: 'include' // 确保发送和接收cookie
                 })
                 .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(err => Promise.reject(err));
+                    console.log('登录响应状态:', response.status);
+                    console.log('登录响应内容类型:', response.headers.get('content-type'));
+                    
+                    // 针对403错误，特别处理CSRF验证失败情况
+                    if (response.status === 403) {
+                        // 先尝试以文本方式读取响应内容
+                        return response.text().then(text => {
+                            console.log('403响应文本内容:', text);
+                            // 如果响应文本是CSRF验证失败
+                            if (text === 'CSRF验证失败') {
+                                throw new Error('CSRF验证失败，请刷新页面后重试');
+                            }
+                            
+                            // 如果不是纯文本的CSRF错误，尝试解析为JSON
+                            try {
+                                const errorData = JSON.parse(text);
+                                return Promise.reject(errorData);
+                            } catch (e) {
+                                // 如果解析JSON失败，直接使用文本作为错误消息
+                                throw new Error(text || '请求被拒绝');
+                            }
+                        });
                     }
-                    return response.json();
+                    
+                    // 对于非403错误，如果响应不成功
+                    if (!response.ok) {
+                        // 尝试获取JSON错误
+                        return response.text().then(text => {
+                            try {
+                                const errorData = JSON.parse(text);
+                                return Promise.reject(errorData);
+                            } catch (e) {
+                                // 解析失败时使用文本作为错误
+                                throw new Error(text || `请求失败，状态码: ${response.status}`);
+                            }
+                        });
+                    }
+                    
+                    // 成功响应，尝试解析为JSON
+                    return response.text().then(text => {
+                        try {
+                            return JSON.parse(text);
+                        } catch (e) {
+                            throw new Error('服务器返回了无法解析的响应');
+                        }
+                    });
                 })
                 .then(data => {
                     handleLoginSuccess(data);
                 })
                 .catch(error => {
                     console.error('登录失败:', error);
-                    showError(error.detail || '登录失败，请检查用户名和密码');
+                    if (error.message) {
+                        showError(error.message);
+                    } else {
+                        showError(error.detail || '登录失败，请检查用户名和密码');
+                    }
                 })
                 .finally(() => {
                     setButtonLoading(false);
@@ -340,28 +461,76 @@
                 fetch(JSON_LOGIN_URL, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken  // 添加CSRF令牌到头部
                     },
-                    body: JSON.stringify(loginData)
+                    body: JSON.stringify(loginData),
+                    credentials: 'include' // 确保发送和接收cookie
                 })
                 .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(err => Promise.reject(err));
+                    console.log('JSON登录响应状态:', response.status);
+                    console.log('JSON登录响应内容类型:', response.headers.get('content-type'));
+                    
+                    // 针对403错误，特别处理CSRF验证失败情况
+                    if (response.status === 403) {
+                        // 先尝试以文本方式读取响应内容
+                        return response.text().then(text => {
+                            console.log('403响应文本内容:', text);
+                            // 如果响应文本是CSRF验证失败
+                            if (text === 'CSRF验证失败') {
+                                throw new Error('CSRF验证失败，请刷新页面后重试');
+                            }
+                            
+                            // 如果不是纯文本的CSRF错误，尝试解析为JSON
+                            try {
+                                const errorData = JSON.parse(text);
+                                return Promise.reject(errorData);
+                            } catch (e) {
+                                // 如果解析JSON失败，直接使用文本作为错误消息
+                                throw new Error(text || '请求被拒绝');
+                            }
+                        });
                     }
-                    return response.json();
+                    
+                    // 对于非403错误，如果响应不成功
+                    if (!response.ok) {
+                        // 尝试获取JSON错误
+                        return response.text().then(text => {
+                            try {
+                                const errorData = JSON.parse(text);
+                                return Promise.reject(errorData);
+                            } catch (e) {
+                                // 解析失败时使用文本作为错误
+                                throw new Error(text || `请求失败，状态码: ${response.status}`);
+                            }
+                        });
+                    }
+                    
+                    // 成功响应，尝试解析为JSON
+                    return response.text().then(text => {
+                        try {
+                            return JSON.parse(text);
+                        } catch (e) {
+                            throw new Error('服务器返回了无法解析的响应');
+                        }
+                    });
                 })
                 .then(data => {
                     handleLoginSuccess(data);
                 })
                 .catch(error => {
                     console.error('登录失败:', error);
-                    showError(error.detail || '登录失败，请检查用户名和密码');
+                    if (error.message) {
+                        showError(error.message);
+                    } else {
+                        showError(error.detail || '登录失败，请检查用户名和密码');
+                    }
                 })
                 .finally(() => {
                     setButtonLoading(false);
                 });
             }
-        });
+        }
         
         // 注册链接
         document.getElementById('registerLink').addEventListener('click', function(e) {
@@ -369,16 +538,22 @@
             window.location.href = '/register';
         });
         
-        // 检查API是否可访问
-        fetch(`${API_BASE_URL}/api/v1/health`)
-            .then(response => response.json())
-            .then(data => {
-                console.log('API健康检查:', data);
-            })
-            .catch(error => {
-                console.error('API连接错误:', error);
-                showError('无法连接到服务器，请检查网络连接或联系管理员');
-            });
+        // 页面初始化 - 获取CSRF令牌并检查API健康状态
+        (async function initPage() {
+            try {
+                // 获取CSRF令牌
+                await fetchCsrfToken();
+                
+                // 检查API健康状态
+                const healthResponse = await fetch(`${API_BASE_URL}/api/v1/health`, { 
+                    credentials: 'include' 
+                });
+                const healthData = await healthResponse.json();
+                console.log('API健康检查:', healthData);
+            } catch (error) {
+                console.error('页面初始化失败:', error);
+            }
+        })();
     </script>
 </body>
 </html> 
